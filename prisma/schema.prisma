@@ -13,3 +13,117 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique @db.VarChar(100)
+  username   String   @unique @db.VarChar(100)
+  password   String   @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  refresh_tokens     RefreshToken[]
+  emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
+  accounts           Accounts[]
+  playbooks          Playbooks[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id          Int      @id @default(autoincrement())
+  user_id     Int
+  token       String   @db.VarChar(255)
+  device_info String   @db.VarChar(255)
+  expires_at  DateTime
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model EmailVerification {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @db.VarChar(255)
+  expires_at DateTime
+  created_at DateTime @default(now())
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("email_verifications")
+}
+
+model PasswordReset {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  otp_hash   String    @db.VarChar(255)
+  expires_at DateTime
+  used_at    DateTime?
+  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+model Accounts {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  nickname   String   @db.VarChar(255)
+  exchange   String   @db.VarChar(50)
+  balance    Decimal  @default(0)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  trades     Trades[]
+
+  @@map("accounts")
+}
+
+model Playbooks {
+  id             Int              @id @default(autoincrement())
+  user_id        Int
+  name           String           @db.VarChar(255)
+  description    String           @db.VarChar(255)
+  created_at     DateTime         @default(now())
+  updated_at     DateTime         @updatedAt
+  user           User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  tradePlaybooks TradePlaybooks[]
+
+  @@map("playbooks")
+}
+
+model Trades {
+  id             Int              @id @default(autoincrement())
+  account_id     Int
+  pair           String           @db.VarChar(50)
+  position       String           @db.VarChar(5) // Long  or Short
+  entry_price    Decimal          @default(0)
+  position_size  Decimal          @default(0)
+  sl_price       Decimal          @default(0)
+  tp_price       Decimal          @default(0)
+  entry_time     DateTime         @default(now())
+  exit_time      DateTime?
+  trade_duration Int              @default(0)
+  trade_result   String           @db.VarChar(5) // Win, BE or Loss
+  pnl            Decimal          @default(0)
+  risk_reward    Decimal          @default(0)
+  rr_actual      Decimal          @default(0)
+  status         String           @default("Open") @db.VarChar(5) // Open or Closed
+  link_img       String
+  account        Accounts         @relation(fields: [account_id], references: [id], onDelete: Cascade)
+  tradePlaybooks TradePlaybooks[]
+
+  @@map("trades")
+}
+
+model TradePlaybooks {
+  id          Int       @id @default(autoincrement())
+  trade_id    Int
+  playbook_id Int
+  trade       Trades    @relation(fields: [trade_id], references: [id], onDelete: Cascade)
+  playbook    Playbooks @relation(fields: [playbook_id], references: [id], onDelete: Cascade)
+
+  @@unique([trade_id, playbook_id])
+  @@map("trade_playbooks")
+}
