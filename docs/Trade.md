@@ -57,7 +57,6 @@ Base URL: `/api.domain/v1`
 {
   "exit_price": 69500.00,
   "exit_time": "2025-11-13T14:30:00Z",
-  "note": "Closed manually at resistance."
 }
 ```
 - Response 200
@@ -70,6 +69,8 @@ Base URL: `/api.domain/v1`
     "position": "LONG",
     "entry_price": 68000.25,
     "exit_price": 69500.00,
+    "exit_time": "2025-11-13T14:30:00Z",
+    "trade_duration": "6300s",
     "realized_pnl": 749.88,
     "risk_reward": 2.0,
     "rr_actual": 2.3,
