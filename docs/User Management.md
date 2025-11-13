@@ -29,7 +29,7 @@ Base URL: `/api.domain/v1`
 ---
 
 ### Update User Profile
-- Method : `PUT`
+- Method : `PATCH`
 - Endpoint : `/users/me`
 - Authorization : `Bearer <accessToken>`
 - Request Body

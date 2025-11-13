@@ -82,7 +82,7 @@ Base URL: `/api.domain/v1`
 ```
 
 ## Update Playbook
-- Method : `PUT`
+- Method : `PATCH`
 - Endpoint : `/playbooks/:id`
 - Authorization : `Bearer <accessToken>`
 - Request Body
