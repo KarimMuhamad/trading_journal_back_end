@@ -20,18 +20,26 @@ Base URL: `/api.domain/v1`
 - Response 201
 ```json
 {
-  "message": "Playbook created successfully."
+  "status": "success",
+  "message": "Playbook created successfully.",
+  "data": {
+    "id": 123,
+    "name": "Extreme Order Block",
+    "description": "A sample playbook for extreme order block strategy.",
+  }
 }
 ```
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "Invalid request. Please check your input."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -42,22 +50,26 @@ Base URL: `/api.domain/v1`
 - Authorization : `Bearer <accessToken>`
 - Response 200
 ```json
-[
-  {
-    "id": 123,
-    "name": "Extreme Order Block",
-    "description": "A sample playbook for extreme order block strategy.",
-  },
-  {
-    "id": 456,
-    "name": "Mean Reversion",
-    "description": "A sample playbook for mean reversion strategy.",
-  }
-]
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 123,
+      "name": "Extreme Order Block",
+      "description": "A sample playbook for extreme order block strategy."
+    },
+    {
+      "id": 456,
+      "name": "Extreme Order Block 2",
+      "description": "A sample playbook for extreme order block strategy 2."
+    }
+  ]
+}
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -69,14 +81,19 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
-  "id": 123,
-  "name": "Extreme Order Block",
-  "description": "A sample playbook for extreme order block strategy.",
+  "status": "success",
+  "message": "Get Playbook successfully.",
+  "data" : {
+    "id": 123,
+    "name": "Extreme Order Block",
+    "description": "A sample playbook for extreme order block strategy.",
+  }
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -95,18 +112,26 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
-  "message": "Playbook updated successfully."
+  "status": "success",
+  "message": "Playbook updated successfully.",
+  "data": {
+    "id": 123,
+    "name": "Extreme Order Block",
+    "description": "A sample playbook for extreme order block strategy.",
+  }
 }
 ```
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "Invalid request. Please check your input."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -118,12 +143,14 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
-  "message": "Playbook deleted successfully."
+  "status": "success",
+  "message": "Playbook deleted successfully.",
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```

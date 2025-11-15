@@ -22,13 +22,27 @@ Base URL: `/api.domain/v1`
 - Response 201
 ```json
 {
-  "message": "User registered successfully. Please verify your email."
+  "status": "success",
+  "message": "User registered successfully. Please verify your email.",
+  "data": {
+    "username" : "karimfx",
+    "email" : "karim@example.com",
+    "isVerified" : false
+  }
+}
+```
+- Response 409
+```json
+{
+  "status": "error",
+  "message": "Username or email already exists."
 }
 ```
 - Response 400
 ```json
 {
-  "message": "Username or email already exists."
+  "status": "error",
+  "message": "Validation error"
 }
 ```
 ---
@@ -46,14 +60,29 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Login successful",
-  "accessToken": "<accessToken>",
+  "data": {
+    "id": 1,
+    "username": "karimfx",
+    "email": "karim@example.com",
+    "isVerified": false
+  },
+  "accessToken": "<accessToken>"
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Invalid email or password."
+}
+```
+- Response 400
+```json
+{
+  "status": "error",
+  "message": "Validation error"
 }
 ```
 - Cookie
@@ -76,6 +105,7 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Logout successful."
 }
 ```
@@ -100,6 +130,7 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Access token refreshed successfully.",
   "accessToken": "<newAccessToken>"
 }
@@ -107,6 +138,7 @@ Base URL: `/api.domain/v1`
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Invalid or expired refresh token."
 }
 ```
@@ -126,24 +158,28 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Verification email sent successfully. Please check your email."
 }
 ```
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "User already verified."
 }
 ```
 - Response 429
 ```json
 {
+  "status": "error",
   "message": "Too many requests. Please try again later."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Invalid or expired access token."
 }
 ```
@@ -161,12 +197,14 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Email verified successfully."
 }
 ```
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "Invalid or expired token."
 }
 ```
@@ -179,6 +217,7 @@ Base URL: `/api.domain/v1`
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Invalid or expired access token."
 }
 ```
@@ -198,6 +237,7 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Password changed successfully."
 }
 ```
@@ -211,12 +251,14 @@ Base URL: `/api.domain/v1`
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "Current password is incorrect."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Invalid or expired access token."
 }
 ```
@@ -233,18 +275,21 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "User Found."
 }
 ```
 - Response 404
 ```json
 {
+  "status": "error",
   "message": "User not found."
 }
 ```
 - Response 429
 ```json
 {
+  "status": "error",
   "message": "Too many requests. Please try again later."
 }
 ```
@@ -261,18 +306,21 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "OTP Code sent successfully. Please check your email."
 }
 ```
 - Response 404
 ```json
 {
+  "status": "error",
   "message": "User not found."
 }
 ```
 - Response 429
 ```json
 {
+  "status": "error",
   "message": "Too many requests. Please try again later."
 }
 ```
@@ -292,30 +340,34 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Password reset successfully."
 }
 ```
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "Invalid OTP Code."
 }
 ```
 - Response 404
 ```json
 {
+  "status": "error",
   "message": "User not found."
 }
 ```
 - Response 429
 ```json
 {
+  "status": "error",
   "message": "Too many requests. Please try again later."
 }
 ```
 - Response 401
 ```json
 {
-  "message": "Invalid or expired access token."
+  "message": "Invalid or  access token."
 }
 ```

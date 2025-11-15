@@ -15,14 +15,18 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
-  "id": 123,
-  "username": "karimfx",
-  "email": "karim@example.com",
+  "status" : "success",
+  "data" : {
+    "id": 123,
+    "username": "karimfx",
+    "email": "karim@example.com"
+  }
 }
 ```
 - Response 401
 ```json
 {
+  "status" : "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -36,18 +40,25 @@ Base URL: `/api.domain/v1`
 ```json
 {
   "username": "karimfx",
-  "email": "karim@example.com",
+  "email": "karim@example.com"
 }
 ```
 - Response 200
 ```json
 {
-  "message": "User profile updated successfully."
+  "status": "success",
+  "message": "User profile updated successfully.",
+  "data" : {
+    "id" : 123,
+    "username " : "karimfx12",
+    "email" : "karim@example.com"
+  }
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -71,12 +82,14 @@ Base URL: `/api.domain/v1`
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "Invalid password."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```

@@ -21,18 +21,27 @@ Base URL: `/api.domain/v1`
 - Response 201
 ```json
 {
-  "message": "Account created successfully."
+  "status": "success",
+  "message": "Account created successfully.",
+  "data": {
+    "id": 123,
+    "nickName": "karimfx",
+    "exchange": "Binance",
+    "balance": "1000"
+  }
 }
 ```
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "Invalid request. Please check your input."
 }
 ```
 - Response 401 
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -44,15 +53,19 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
-  "id": 123,
-  "nickName": "karimfx",
-  "exchange": "Binance",
-  "balance": "$1000"
+  "status" : "success",
+  "data" : {
+    "id": 123,
+    "nickName": "karimfx",
+    "exchange": "Binance",
+    "balance": "1000"
+  }
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -64,26 +77,27 @@ Base URL: `/api.domain/v1`
 - Request Body
 ```json
 {
-  "nickName": "karimfx",
-  "exchange": "Binance",
-  "balance": "$1500"
+  "nickName": "karimfx"
 }
 ```
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Account updated successfully."
 }
 ```
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "Invalid request. Please check your input."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -95,12 +109,14 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Account deleted successfully."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -111,24 +127,28 @@ Base URL: `/api.domain/v1`
 - Authorization : `Bearer <accessToken>`
 - Response 200
 ```json
-[
-  {
-    "id": 123,
-    "nickName": "karimfx",
-    "exchange": "Binance",
-    "balance": "$1000"
-  },
-  {
-    "id": 456,
-    "nickName": "ahmedfx",
-    "exchange": "Binance",
-    "balance": "$2000"
-  }
-]
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 123,
+      "nickName": "karimfx",
+      "exchange": "Binance",
+      "balance": "$1000"
+    },
+    {
+      "id": 456,
+      "nickName": "ahmedfx",
+      "exchange": "Binance",
+      "balance": "$2000"
+    }
+  ]
+}
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -157,8 +177,9 @@ Base URL: `/api.domain/v1`
 - Response 201
 ```json
 {
+  "status": "success",
   "message": "Trade created successfully.",
-  "trade": {
+  "data": {
     "id": 201,
     "account_id": 12,
     "pair": "BTCUSDT",
@@ -176,12 +197,14 @@ Base URL: `/api.domain/v1`
 - Response 400
 ```json
 {
+  "status": "error",
   "message": "Invalid trade data."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -193,8 +216,9 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "account_id": 12,
-  "trades": [
+  "data": [
     {
       "id": 201,
       "pair": "BTCUSDT",
@@ -218,12 +242,14 @@ Base URL: `/api.domain/v1`
 - Response 404
 ```json
 {
+  "status": "error",
   "message": "No trades found for this account."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```

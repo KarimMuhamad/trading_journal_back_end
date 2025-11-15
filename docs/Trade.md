@@ -13,37 +13,42 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
-  "id": 201,
-  "account_id": 12,
-  "pair": "BTCUSDT",
-  "position": "LONG",
-  "entry_price": 68000.25,
-  "exit_price": 69500.00,
-  "position_size": 0.5,
-  "realized_pnl": 749.88,
-  "risk_reward": 2.0,
-  "rr_actual": 2.3,
-  "trade_result": "WIN",
-  "status": "Closed",
-  "note": "Closed manually at resistance.",
-  "entry_time": "2025-11-13T10:00:00Z",
-  "exit_time": "2025-11-13T14:30:00Z",
-  "link_img": "https://cdn.example.com/trades/chart1.png",
-  "playbooks": [
-    { "id": 1, "name": "Order Block" },
-    { "id": 3, "name": "Liquidity Sweep" }
-  ]
+  "status": "success",
+  "data" : {
+    "id": 201,
+    "account_id": 12,
+    "pair": "BTCUSDT",
+    "position": "LONG",
+    "entry_price": 68000.25,
+    "exit_price": 69500.00,
+    "position_size": 0.5,
+    "realized_pnl": 749.88,
+    "risk_reward": 2.0,
+    "rr_actual": 2.3,
+    "trade_result": "WIN",
+    "status": "Closed",
+    "note": "Closed manually at resistance.",
+    "entry_time": "2025-11-13T10:00:00Z",
+    "exit_time": "2025-11-13T14:30:00Z",
+    "link_img": "https://cdn.example.com/trades/chart1.png",
+    "playbooks": [
+      { "id": 1, "name": "Order Block" },
+      { "id": 3, "name": "Liquidity Sweep" }
+    ]
+  }
 }
 ```
 - Response 404
 ```json
 {
+  "status": "error",
   "message": "Trade not found."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
@@ -62,8 +67,9 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "Trade closed successfully.",
-  "trade": {
+  "data": {
     "id": 201,
     "pair": "BTCUSDT",
     "position": "LONG",
@@ -82,12 +88,14 @@ Base URL: `/api.domain/v1`
 - Response 404
 ```json
 {
+  "status": "error",
   "message": "Trade not found."
 }
 ```
 - Response 401
 ```json
 {
+  "status": "error",
   "message": "Unauthorized. Please log in."
 }
 ```
