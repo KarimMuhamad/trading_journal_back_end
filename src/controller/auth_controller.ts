@@ -20,7 +20,7 @@ export class AuthController {
             });
         } catch (e) {
             next(e);
-            logger.warn("Error during register", {error: e});
+            logger.warn(`User registration failed : ${e}`, {request: req.statusCode});
         }
     }
 }
