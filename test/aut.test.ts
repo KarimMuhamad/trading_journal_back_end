@@ -36,3 +36,89 @@ describe('POST ' + buildUrl('') , () => {
         expect(response.body.errors).toBeDefined();
     });
 });
+
+describe('POST' + buildUrl('/auth/login'), () => {
+   beforeEach(async () => {
+      await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
+   });
+
+   afterAll(async () => {
+       await AuthTestUtils.deleteAll();
+   });
+
+    it('should be able to login user with username', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/login')).send({
+            identifier: 'test',
+            password: 'test123456'
+        });
+
+        logger.info(response.headers['set-cookie']);
+        logger.info(response.headers['user-agent']);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.username).toBe('test');
+        expect(response.body.accessToken).toBeDefined();
+        expect(response.headers['set-cookie']).toBeDefined();
+        expect(response.headers['set-cookie'][0]).toBeDefined();
+
+    });
+
+    it('should be able to login user with email', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/login')).send({
+            identifier: 'test@dev.com',
+            password: 'test123456'
+        }).set('User-Agent', 'Testing');
+
+        logger.info(response.headers['set-cookie']);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.username).toBe('test');
+        expect(response.body.accessToken).toBeDefined();
+        expect(response.headers['set-cookie']).toBeDefined();
+        expect(response.headers['set-cookie'][0]).toBeDefined();
+
+    });
+
+    it('should be reject login user with validation error', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/login')).send({
+            identifier: 'te',
+            password: 'test12345'
+        });
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+        expect(response.body.message).toBe('Validation error');
+        expect(response.body.errors).toBeDefined();
+        expect(response.headers['set-cookie']).toBeUndefined();
+
+    });
+
+    it('should be reject login user if email/username is wrong', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/login')).send({
+            identifier: 'test231',
+            password: 'test12345'
+        });
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+        expect(response.headers['set-cookie']).toBeUndefined();
+
+    });
+
+    it('should be reject login user if password is wrong', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/login')).send({
+            identifier: 'test',
+            password: 'testsalah'
+        });
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+        expect(response.headers['set-cookie']).toBeUndefined();
+
+    });
+
+});

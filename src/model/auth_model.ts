@@ -1,4 +1,4 @@
-import { User } from "@prisma/client";
+import { User } from "../../prisma/generated/client";
 
 export type AuthResponse = {
     id: number;
@@ -11,6 +11,18 @@ export type AuthRequestRegister = {
     email: string;
     password: string;
 };
+
+export type AuthRequestLogin = {
+    identifier: string;
+    password: string;
+}
+
+export type AuthLoginResponse = {
+    authRes: AuthResponse;
+    accessToken: string;
+    refreshToken: string;
+    refreshTokenExpiresIn: number;
+}
 
 export function toAuthResponse(user: User): AuthResponse {
     return {

@@ -1,6 +1,6 @@
 import {Request, Response, NextFunction} from "express";
 import logger from "../application/logger";
-import {AuthRequestRegister} from "../model/auth_model";
+import {AuthRequestLogin, AuthRequestRegister} from "../model/auth_model";
 import {AuthService} from "../service/auth_service";
 
 export class AuthController {
@@ -21,6 +21,31 @@ export class AuthController {
         } catch (e) {
             next(e);
             logger.warn(`User registration failed : ${e}`, {request: req.statusCode});
+        }
+    }
+
+    static async login(req: Request, res: Response, next: NextFunction) {
+        try {
+            const request : AuthRequestLogin = req.body as AuthRequestLogin;
+            const response = await AuthService.login(request, req.headers['user-agent'] as string);
+
+            res.cookie('refreshToken', response.refreshToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'strict',
+                maxAge: response.refreshTokenExpiresIn! - Date.now()
+            });
+
+            res.status(200).json({
+                status: "success",
+                message: "User logged in successfully",
+                data: response.authRes,
+                accessToken: response.accessToken
+            });
+
+        } catch (e) {
+            next(e);
+            logger.warn(`User login failed : ${e}`, {request: req.statusCode});
         }
     }
 }
