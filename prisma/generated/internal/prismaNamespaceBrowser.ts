@@ -50,7 +50,7 @@ export const AnyNull = runtime.objectEnumValues.instances.AnyNull
 
 export const ModelName = {
   User: 'User',
-  RefreshToken: 'RefreshToken',
+  auth_session: 'auth_session',
   EmailVerification: 'EmailVerification',
   PasswordReset: 'PasswordReset',
   Accounts: 'Accounts',
@@ -88,17 +88,22 @@ export const UserScalarFieldEnum = {
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
-export const RefreshTokenScalarFieldEnum = {
+export const Auth_sessionScalarFieldEnum = {
   id: 'id',
   user_id: 'user_id',
   token: 'token',
   device_info: 'device_info',
+  user_agent: 'user_agent',
+  ip_address: 'ip_address',
+  browser: 'browser',
+  os: 'os',
+  revoked_at: 'revoked_at',
   expires_at: 'expires_at',
   created_at: 'created_at',
   updated_at: 'updated_at'
 } as const
 
-export type RefreshTokenScalarFieldEnum = (typeof RefreshTokenScalarFieldEnum)[keyof typeof RefreshTokenScalarFieldEnum]
+export type Auth_sessionScalarFieldEnum = (typeof Auth_sessionScalarFieldEnum)[keyof typeof Auth_sessionScalarFieldEnum]
 
 
 export const EmailVerificationScalarFieldEnum = {

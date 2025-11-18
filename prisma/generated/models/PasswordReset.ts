@@ -406,10 +406,6 @@ export type PasswordResetUncheckedUpdateManyWithoutUserNestedInput = {
   deleteMany?: Prisma.PasswordResetScalarWhereInput | Prisma.PasswordResetScalarWhereInput[]
 }
 
-export type NullableDateTimeFieldUpdateOperationsInput = {
-  set?: Date | string | null
-}
-
 export type PasswordResetCreateWithoutUserInput = {
   otp_hash: string
   expires_at: Date | string

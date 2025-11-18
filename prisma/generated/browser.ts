@@ -23,10 +23,10 @@ export * from './enums';
  */
 export type User = Prisma.UserModel
 /**
- * Model RefreshToken
+ * Model auth_session
  * 
  */
-export type RefreshToken = Prisma.RefreshTokenModel
+export type auth_session = Prisma.auth_sessionModel
 /**
  * Model EmailVerification
  * 

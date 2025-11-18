@@ -38,22 +38,26 @@ describe('POST ' + buildUrl('') , () => {
 });
 
 describe('POST' + buildUrl('/auth/login'), () => {
+    const userAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:145.0) Gecko/20100101 Firefox/145.0';
+    const ipAddress = '127.0.0.1';
+
+
    beforeEach(async () => {
       await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
    });
 
-   afterAll(async () => {
-       await AuthTestUtils.deleteAll();
-   });
+   // afterAll(async () => {
+   //     await AuthTestUtils.deleteAll();
+   // });
 
     it('should be able to login user with username', async () => {
         const response = await supertest(web).post(buildUrl('/auth/login')).send({
             identifier: 'test',
             password: 'test123456'
-        });
+        }).set('User-Agent', userAgent).set('X-Forwarded-For', ipAddress);
 
+        logger.info(response.body);
         logger.info(response.headers['set-cookie']);
-        logger.info(response.headers['user-agent']);
 
         expect(response.status).toBe(200);
         expect(response.body.status).toBe('success');
@@ -68,7 +72,7 @@ describe('POST' + buildUrl('/auth/login'), () => {
         const response = await supertest(web).post(buildUrl('/auth/login')).send({
             identifier: 'test@dev.com',
             password: 'test123456'
-        }).set('User-Agent', 'Testing');
+        }).set('User-Agent', userAgent).set('X-Forwarded-For', ipAddress);
 
         logger.info(response.headers['set-cookie']);
 
@@ -118,7 +122,6 @@ describe('POST' + buildUrl('/auth/login'), () => {
         expect(response.body.status).toBe('error');
         expect(response.error).toBeDefined();
         expect(response.headers['set-cookie']).toBeUndefined();
-
     });
 
 });

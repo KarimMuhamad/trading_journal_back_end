@@ -4,6 +4,7 @@ export type AuthResponse = {
     id: number;
     username: string;
     email: string;
+    isVerified: boolean;
 };
 
 export type AuthRequestRegister = {
@@ -29,5 +30,6 @@ export function toAuthResponse(user: User): AuthResponse {
         id: user.id,
         username: user.username,
         email: user.email,
+        isVerified: user.is_verified
     };
 }

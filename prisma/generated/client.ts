@@ -48,10 +48,10 @@ path.join(process.cwd(), "prisma/generated/libquery_engine-rhel-openssl-3.0.x.so
  */
 export type User = Prisma.UserModel
 /**
- * Model RefreshToken
+ * Model auth_session
  * 
  */
-export type RefreshToken = Prisma.RefreshTokenModel
+export type auth_session = Prisma.auth_sessionModel
 /**
  * Model EmailVerification
  * 
