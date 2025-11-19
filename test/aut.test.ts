@@ -5,6 +5,7 @@ import {web} from "../src/application/web";
 import logger from "../src/application/logger";
 import {AuthTestUtils} from "./test_utils";
 import jwt from "jsonwebtoken";
+import prisma from "../src/application/database";
 
 describe('POST ' + buildUrl('') , () => {
     afterAll(async () => {
@@ -178,4 +179,55 @@ describe('DELETE ' + buildUrl('/auth/logout'), () => {
         expect(response.body.status).toBe('error');
         expect(response.error).toBeDefined();
     });
+});
+
+describe('POST ' + buildUrl('/auth/refresh'), () => {
+    let userId: number;
+    let sessionJSON: any;
+
+    beforeEach(async ()=> {
+        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await AuthTestUtils.createSession('test', 'test123456');
+
+        userId = session.userId;
+        sessionJSON = session.session;
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be generate new Access Token', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/refresh')).set('Cookie', sessionJSON);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.accessToken).toBeDefined();
+    });
+
+    it('should be reject generate and clear cookies if session Invalid', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/refresh')).set('Cookie', 'invalidSession=invalidSession');
+
+        const cookies = response.headers['set-cookie'];
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(cookies[0]).toContain("Expires=Thu, 01 Jan 1970");
+    });
+
+    it('should be reject generate if session was expired', async () => {
+        await prisma.auth_session.updateMany({
+            where: {user_id: userId},
+            data: {expires_at: new Date(Date.now() - 1000)}
+        });
+
+        const response = await supertest(web).post(buildUrl('/auth/refresh')).set('Cookie', sessionJSON);
+
+        const cookies = response.headers['set-cookie'];
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(cookies[0]).toContain("Expires=Thu, 01 Jan 1970");
+    });
+
 });

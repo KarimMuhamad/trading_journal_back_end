@@ -3,6 +3,7 @@ import logger from "../application/logger";
 import {AuthRequestLogin, AuthRequestRegister} from "../model/auth_model";
 import {AuthService} from "../service/auth_service";
 import {AuthUserRequest} from "../type/auth_type";
+import {ErrorResponse} from "../error/error_response";
 
 export class AuthController {
     static async register(req: Request, res: Response, next: NextFunction) {
@@ -19,9 +20,12 @@ export class AuthController {
                 username: response.username,
                 email: response.email.replace(/(?<=.).(?=[^@]*@)/g, '*')
             });
-        } catch (e) {
+        } catch (e: any) {
+            logger.warn("User Registration failed", {
+                message: e.message,
+                status: e.status,
+            });
             next(e);
-            logger.warn(`User registration failed : ${e}`, {request: req.statusCode});
         }
     }
 
@@ -53,9 +57,12 @@ export class AuthController {
                 identifier: request.identifier.replace(/(?<=.).(?=[^@]*@)/g, '*'),
             });
 
-        } catch (e) {
+        } catch (e: any) {
+            logger.warn("User Login failed", {
+                message: e.message,
+                status: e.status,
+            });
             next(e);
-            logger.warn(`User login failed : ${e}`, {request: req.statusCode});
         }
     }
 
@@ -75,9 +82,43 @@ export class AuthController {
                 email: req.user?.email.replace(/(?<=.).(?=[^@]*@)/g, '*'),
             });
 
-        } catch (e) {
+        } catch (e: any) {
+            logger.warn("User Logout failed", {
+                message: e.message,
+                status: e.status,
+            });
+
+            if (e instanceof ErrorResponse && e.statusCode === 401) {
+                res.clearCookie('session');
+            }
             next(e);
-            logger.warn(`User logout failed : ${e}`, {request: req.statusCode});
+        }
+    }
+
+    static async refreshAccessToken(req: Request, res: Response, next: NextFunction) {
+        try {
+            const session = req.cookies.session;
+            const response = await AuthService.refreshAccessToken(session);
+            res.status(200).json({
+                status: "success",
+                message: "Access token refreshed successfully",
+                data: response.authRes,
+                accessToken: response.accessToken
+            });
+
+            logger.info('User access token refreshed', {username: response.authRes.username});
+
+        } catch (e: any) {
+            logger.warn("Access token refresh failed", {
+                message: e.message,
+                status: e.status,
+            });
+
+            if (e instanceof ErrorResponse && e.statusCode === 401) {
+                res.clearCookie('session');
+            }
+
+            next(e);
         }
     }
 }

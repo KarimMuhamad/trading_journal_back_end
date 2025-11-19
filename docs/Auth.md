@@ -132,6 +132,12 @@ Base URL: `/api.domain/v1`
 {
   "status": "success",
   "message": "Access token refreshed successfully.",
+  "data" : {
+    ""id": 1,
+    "username": "karimfx",
+    "email": "karim@example.com",
+    "isVerified": false"
+  },
   "accessToken": "<newAccessToken>"
 }
 ```

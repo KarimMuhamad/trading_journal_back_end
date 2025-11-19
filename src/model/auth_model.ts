@@ -21,9 +21,9 @@ export type AuthRequestLogin = {
 export type AuthLoginResponse = {
     authRes: AuthResponse;
     accessToken: string;
-    session_id: number;
-    token: string;
-    refreshTokenExpiresIn: number;
+    session_id?: number;
+    token?: string;
+    refreshTokenExpiresIn?: number;
 }
 
 export function toAuthResponse(user: User): AuthResponse {

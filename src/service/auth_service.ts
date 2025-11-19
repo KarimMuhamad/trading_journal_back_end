@@ -15,6 +15,7 @@ import crypto from  'crypto';
 import {User} from "../../prisma/generated/client";
 import {UAParser} from "ua-parser-js";
 import logger from "../application/logger";
+import {parseCookieSession} from "../utils/parseCookieSession";
 
 export class AuthService {
     static async register(req: AuthRequestRegister ) : Promise<AuthResponse> {
@@ -105,7 +106,7 @@ export class AuthService {
     }
 
     static async logout(user: User, sessionJSON: any) : Promise<AuthResponse> {
-        const {sid, rt} = JSON.parse(sessionJSON);
+        const {sid, rt} = parseCookieSession(sessionJSON);
 
         const session = await prisma.auth_session.findFirst({
             where: {
@@ -115,7 +116,7 @@ export class AuthService {
             }
         });
 
-        if (!session) throw new ErrorResponse(401, "Invalid Credentials");
+        if (!session) throw new ErrorResponse(401, "Unauthorized, invalid session");
 
         if (await argon2.verify(session.token, rt)) {
             await prisma.auth_session.update({
@@ -128,7 +129,46 @@ export class AuthService {
             return toAuthResponse(user);
 
         } else {
-            throw new ErrorResponse(401, "Invalid Credentials");
+            throw new ErrorResponse(401, "Unauthorized, invalid session");
+        }
+    }
+
+    static async refreshAccessToken(sessionJSON: any) : Promise<AuthLoginResponse> {
+        const {sid, rt} = parseCookieSession(sessionJSON);
+        const session = await prisma.auth_session.findFirst({
+            where: {
+                id: sid,
+                revoked_at: null,
+                expires_at: {gt: new Date()}
+            }
+        });
+
+        if (!session) throw new ErrorResponse(401, "Unauthorized, invalid or expired session");
+
+        const isValidSession = await argon2.verify(session.token, rt);
+        if (!isValidSession) {
+            await prisma.auth_session.update({
+                where: {id: session.id},
+                data: {revoked_at: new Date()}
+            });
+
+            logger.warn('Miss Match Session and Revoked it', {sessionJSON});
+
+            throw new ErrorResponse(401, "Unauthorized, invalid session");
+        }
+
+        const user = await prisma.user.findUnique({
+            where: {id: session.user_id}
+        });
+
+        if (!user) throw new ErrorResponse(401, "Unauthorized, invalid session User no longer exists");
+
+        const payload = {id: user.id};
+        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET!, {expiresIn: '25m'});
+
+        return {
+            authRes: toAuthResponse(user),
+            accessToken: accessToken,
         }
     }
 }
