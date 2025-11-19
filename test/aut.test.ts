@@ -4,6 +4,7 @@ import supertest from "supertest";
 import {web} from "../src/application/web";
 import logger from "../src/application/logger";
 import {AuthTestUtils} from "./test_utils";
+import jwt from "jsonwebtoken";
 
 describe('POST ' + buildUrl('') , () => {
     afterAll(async () => {
@@ -46,9 +47,9 @@ describe('POST' + buildUrl('/auth/login'), () => {
       await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
    });
 
-   // afterAll(async () => {
-   //     await AuthTestUtils.deleteAll();
-   // });
+   afterAll(async () => {
+       await AuthTestUtils.deleteAll();
+   });
 
     it('should be able to login user with username', async () => {
         const response = await supertest(web).post(buildUrl('/auth/login')).send({
@@ -124,4 +125,57 @@ describe('POST' + buildUrl('/auth/login'), () => {
         expect(response.headers['set-cookie']).toBeUndefined();
     });
 
+});
+
+describe('DELETE ' + buildUrl('/auth/logout'), () => {
+    let userId: number;
+    let accessToken: string;
+    let sessionJSON: any;
+
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await AuthTestUtils.createSession('test', 'test123456');
+
+        userId = session.userId;
+        accessToken = session.accessToken;
+        sessionJSON = session.session;
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be able to logout user', async () => {
+        const response = await supertest(web).delete(buildUrl('/auth/logout')).set('Authorization', 'Bearer ' + accessToken).set('Cookie', sessionJSON);
+
+        const cookies = response.headers['set-cookie'];
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(cookies[0]).toContain("Expires=Thu, 01 Jan 1970");
+    });
+
+    it('should be reject logout if accessToken Invalid', async () => {
+        const response = await supertest(web).delete(buildUrl('/auth/logout')).set('Authorization', 'Bearer ' + 'invalidAccessToken').set('Cookie', sessionJSON);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject logout if accessToken Expired', async () => {
+        const JWTExpiredAccessToken = jwt.sign({id: userId}, process.env.JWT_ACCESS_TOKEN_SECRET!, {expiresIn: '-1s'});
+
+
+        const response = await supertest(web).delete(buildUrl('/auth/logout')).set('Authorization', 'Bearer ' + JWTExpiredAccessToken).set('Cookie', sessionJSON);
+
+
+        logger.warn(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
 });

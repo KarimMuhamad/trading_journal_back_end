@@ -17,6 +17,7 @@
   "dependencies": {
     "@prisma/client": "^6.19.0",
     "argon2": "^0.44.0",
+    "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
@@ -31,6 +32,7 @@
     "@babel/preset-typescript": "^7.28.5",
     "@jest/globals": "^30.2.0",
     "@types/argon2": "^0.14.1",
+    "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.5",
     "@types/jest": "^30.0.0",
     "@types/jsonwebtoken": "^9.0.10",

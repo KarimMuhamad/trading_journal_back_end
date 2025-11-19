@@ -14,6 +14,7 @@ import jwt from "jsonwebtoken";
 import crypto from  'crypto';
 import {User} from "../../prisma/generated/client";
 import {UAParser} from "ua-parser-js";
+import logger from "../application/logger";
 
 export class AuthService {
     static async register(req: AuthRequestRegister ) : Promise<AuthResponse> {
@@ -74,30 +75,60 @@ export class AuthService {
         const token = crypto.randomBytes(63).toString('hex');
 
         const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET!, {expiresIn: '25m'});
-        const refreshToken = await argon2.hash(token);
+        const refreshTokenHash = await argon2.hash(token);
 
         const parser = new UAParser(userAgent);
         const uaResult = parser.getResult();
 
-        await prisma.auth_session.create({
+        const session = await prisma.auth_session.create({
             data: {
                 user_id: user.id,
-                token: refreshToken,
+                token: refreshTokenHash,
                 device_info: uaResult.device.model || 'Unknown',
                 user_agent: userAgent,
                 ip_address: ipAddress,
                 browser: uaResult.browser.name || 'Unknown',
                 os: uaResult.os.name || 'Unknown',
-                expires_at: new Date(refreshTokenExpiresIn)
+                expires_at: new Date(refreshTokenExpiresIn),
+                revoked_at: null
             }
         });
 
         return {
             authRes: toAuthResponse(user),
             accessToken: accessToken,
-            refreshToken,
+            session_id: session.id,
+            token,
             refreshTokenExpiresIn
         }
 
+    }
+
+    static async logout(user: User, sessionJSON: any) : Promise<AuthResponse> {
+        const {sid, rt} = JSON.parse(sessionJSON);
+
+        const session = await prisma.auth_session.findFirst({
+            where: {
+                id: sid,
+                user_id: user.id,
+                expires_at: {gt: new Date()}
+            }
+        });
+
+        if (!session) throw new ErrorResponse(401, "Invalid Credentials");
+
+        if (await argon2.verify(session.token, rt)) {
+            await prisma.auth_session.update({
+                where: {id: session.id},
+                data: {revoked_at: new Date()}
+            });
+
+            logger.info('Session revoked', {sessionJSON});
+
+            return toAuthResponse(user);
+
+        } else {
+            throw new ErrorResponse(401, "Invalid Credentials");
+        }
     }
 }

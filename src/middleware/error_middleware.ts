@@ -1,6 +1,7 @@
 import {Request, Response, NextFunction} from "express";
 import {ZodError} from "zod";
 import {ErrorResponse} from "../error/error_response";
+import {JsonWebTokenError} from "jsonwebtoken";
 
 export const errorMiddleware = async (err: Error, req: Request, res: Response, next: NextFunction) => {
     if (res.headersSent) {
@@ -12,6 +13,12 @@ export const errorMiddleware = async (err: Error, req: Request, res: Response, n
             status: "error",
             message: "Validation error",
             errors: err.message
+        });
+
+    } else if (err instanceof JsonWebTokenError) {
+        return res.status(401).json({
+            status: "error",
+            message: err.message
         });
     } else if (err instanceof ErrorResponse) {
         return res.status(err.statusCode).json({
