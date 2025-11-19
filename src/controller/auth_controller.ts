@@ -3,7 +3,6 @@ import logger from "../application/logger";
 import {AuthRequestLogin, AuthRequestRegister} from "../model/auth_model";
 import {AuthService} from "../service/auth_service";
 import {AuthUserRequest} from "../type/auth_type";
-import argon2 from "argon2";
 
 export class AuthController {
     static async register(req: Request, res: Response, next: NextFunction) {
