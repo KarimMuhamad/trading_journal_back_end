@@ -139,4 +139,24 @@ export class AuthController {
             next(e);
         }
     }
+
+    static async verifyEmail(req: Request, res: Response, next: NextFunction) {
+        try {
+            const token = req.query.token as string;
+            await AuthService.verifyEmail(token);
+            res.status(200).json({
+                status: "success",
+                message: "Email verified successfully"
+            });
+
+            logger.info('Verification email link clicked', {query: req.url});
+
+        } catch (e: any) {
+            logger.warn("Email verification failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
 }

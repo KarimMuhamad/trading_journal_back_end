@@ -159,7 +159,7 @@ Base URL: `/api.domain/v1`
 
 ### Verify Email Send Link
 - Method : `POST`
-- Endpoint : `/auth/verify/send`
+- Endpoint : `/auth/email/verify/send`
 - Authorization : `Bearer <accessToken>`
 - Response 200
 ```json
@@ -191,8 +191,8 @@ Base URL: `/api.domain/v1`
 ```
 
 ### Verify Email
-- Method : `POST`
-- Endpoint : `/auth/verify`
+- Method : `GET`
+- Endpoint : `/auth/email/verify`
 - Request Body
 ```json
 {

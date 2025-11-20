@@ -205,4 +205,26 @@ export class AuthService {
             html: `<p>Please click the following link to verify your email address: <a href="${verificationLink}">${verificationLink}</a></p>`
         });
     }
+
+    static async verifyEmail(token: string) : Promise<void> {
+        const verification = await prisma.emailVerification.findFirst({
+            where: {
+                token: token,
+                used: false,
+                expires_at: {gt: new Date()}
+            }
+        });
+
+        if (!verification) throw new ErrorResponse(401, "Invalid or expired verification link");
+
+        await prisma.user.update({
+            where: {id: verification.user_id},
+            data: {is_verified: true}
+        });
+
+        await prisma.emailVerification.update({
+            where: {id: verification.id},
+            data: {used: true}
+        });
+    }
 }

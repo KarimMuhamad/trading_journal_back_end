@@ -265,4 +265,59 @@ describe('POST' + buildUrl('/auth/email/send'), () => {
         expect(response.body.status).toBe('error');
         expect(response.error).toBeDefined();
     });
-})
+});
+
+
+describe('GET ' + buildUrl('/auth/email/verify'), () => {
+    let userId: number;
+    let accessToken: string;
+    let sessionJSON: any;
+    const emailTesting = process.env.EMAIL_TESTING as string;
+
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', emailTesting, 'test123456');
+        const session = await AuthTestUtils.createSession('test', 'test123456');
+
+        userId = session.userId;
+        accessToken = session.accessToken;
+        sessionJSON = session.session;
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be verify token email', async () => {
+        await supertest(web).post(buildUrl('/auth/email/send')).set('Authorization', 'Bearer ' + accessToken);
+
+        const tokenVerification = await prisma.emailVerification.findFirst({where: {user_id: userId}});
+
+        const response = await supertest(web).get(buildUrl('/auth/email/verify') + '?token=' + tokenVerification!.token);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be reject verify if token expired', async () => {
+        await supertest(web).post(buildUrl('/auth/email/send')).set('Authorization', 'Bearer ' + accessToken);
+
+        const tokenVerification = await prisma.emailVerification.findFirst({where: {user_id: userId}});
+
+        await prisma.emailVerification.update({
+            where: {id: tokenVerification!.id},
+            data: {expires_at: new Date(Date.now() - 1000)}
+        });
+
+        const response = await supertest(web).get(buildUrl('/auth/email/verify') + '?token=' + tokenVerification!.token);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be reject verify if token invalid', async () => {
+        const response = await supertest(web).get(buildUrl('/auth/email/verify') + '?token=' + 'wrongToken');
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+    });
+});
