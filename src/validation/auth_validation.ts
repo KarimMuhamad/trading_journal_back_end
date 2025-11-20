@@ -10,5 +10,10 @@ export class AuthValidation {
     static readonly LOGIN: ZodType = z.object({
         identifier: z.string().min(3),
         password: z.string().min(8).max(50)
+    });
+
+    static readonly CHANGEPASSWORD: ZodType = z.object({
+        currentPassword: z.string().min(8).max(50),
+        newPassword: z.string().min(8).max(50)
     })
 }

@@ -26,6 +26,11 @@ export type AuthLoginResponse = {
     refreshTokenExpiresIn?: number;
 }
 
+export type AuthChangePasswordRequest = {
+    newPassword: string;
+    currentPassword: string;
+}
+
 export function toAuthResponse(user: User): AuthResponse {
     return {
         id: user.id,

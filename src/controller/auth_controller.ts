@@ -1,6 +1,6 @@
 import {Request, Response, NextFunction} from "express";
 import logger from "../application/logger";
-import {AuthRequestLogin, AuthRequestRegister} from "../model/auth_model";
+import {AuthChangePasswordRequest, AuthRequestLogin, AuthRequestRegister} from "../model/auth_model";
 import {AuthService} from "../service/auth_service";
 import {AuthUserRequest} from "../type/auth_type";
 import {ErrorResponse} from "../error/error_response";
@@ -153,6 +153,26 @@ export class AuthController {
 
         } catch (e: any) {
             logger.warn("Email verification failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
+
+    static async changePassword(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const session = req.cookies.session;
+            await AuthService.changePassword(req.user!, {currentPassword: req.body.currentPassword, newPassword: req.body.newPassword}, session);
+            res.status(200).json({
+                status: "success",
+                message: "Password changed successfully"
+            });
+
+            logger.info('User change password', {username: req.user!.username});
+
+        } catch (e: any) {
+            logger.warn("Password change failed", {
                 message: e.message,
                 status: e.status,
             });

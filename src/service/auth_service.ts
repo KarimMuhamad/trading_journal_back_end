@@ -1,4 +1,5 @@
 import {
+    AuthChangePasswordRequest,
     AuthLoginResponse,
     AuthRequestLogin,
     AuthRequestRegister,
@@ -20,6 +21,8 @@ import {parseCookieSession} from "../utils/parseCookieSession";
 import {Resend} from "resend";
 
 export class AuthService {
+    private static resend : Resend = new Resend(process.env.RESEND_API_KEY!);
+
     static async register(req: AuthRequestRegister ) : Promise<AuthResponse> {
         const registerRequest = Validation.validate(AuthValidation.REGISTER, req);
 
@@ -196,9 +199,7 @@ export class AuthService {
 
         const verificationLink = `${process.env.FRONTEND_URL}/auth/email/verify?token=${token}`;
 
-        const resend = new Resend(process.env.RESEND_API_KEY!);
-
-        await resend.emails.send({
+        await this.resend.emails.send({
             from: 'onboarding@resend.dev',
             to: user.email,
             subject: 'Verify your email address',
@@ -225,6 +226,43 @@ export class AuthService {
         await prisma.emailVerification.update({
             where: {id: verification.id},
             data: {used: true}
+        });
+    }
+
+    static async changePassword(user:User, req: AuthChangePasswordRequest, sessionJSON: any) : Promise<void> {
+        const {sid} = parseCookieSession(sessionJSON);
+        const changePasswordRequest = Validation.validate(AuthValidation.CHANGEPASSWORD, req);
+
+        const isCurrentPasswordValid = await argon2.verify(user.password, changePasswordRequest.currentPassword);
+
+        if (!isCurrentPasswordValid) {
+            throw new ErrorResponse(401, "Invalid current password");
+        }
+
+        const hashedNewPassword = await argon2.hash(changePasswordRequest.newPassword);
+
+        await prisma.user.update({
+            where: {id: user.id},
+            data: {password: hashedNewPassword}
+        });
+
+        await prisma.auth_session.updateMany({
+            where: {
+                user_id: user.id,
+                id: {not: sid}
+            },
+            data: {revoked_at: new Date()}
+        });
+
+        logger.warn('User password changed from session :', {sessionJSON});
+
+        await this.resend.emails.send({
+            from: "onboarding@resend.dev",
+            to: user.email,
+            subject: "Your password has been changed",
+            html: `
+            <p>Your password was successfully changed.</p>
+            <p>If you didn’t do this, please reset your password immediately.</p>`
         });
     }
 }

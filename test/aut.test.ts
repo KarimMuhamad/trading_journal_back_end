@@ -321,3 +321,58 @@ describe('GET ' + buildUrl('/auth/email/verify'), () => {
         expect(response.body.status).toBe('error');
     });
 });
+
+describe('PATCH ' + buildUrl('/auth/change-password'), () => {
+    let userId: number;
+    let accessToken: string;
+    let sessionJSON: any;
+    const emailTesting = process.env.EMAIL_TESTING as string;
+
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', emailTesting, 'currentPassword123');
+        const session = await AuthTestUtils.createSession('test', 'currentPassword123');
+
+        userId = session.userId;
+        accessToken = session.accessToken;
+        sessionJSON = session.session;
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be able to change password ', async () => {
+        const response = await supertest(web).patch(buildUrl('/auth/change-password'))
+            .set('Authorization', 'Bearer ' + accessToken).send({
+                currentPassword: 'currentPassword123',
+                newPassword: 'newPassword123'
+            }).set('Cookie', sessionJSON);
+
+        console.log(sessionJSON);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should reject if currentPassword is Wrong', async () => {
+        const response = await supertest(web).patch(buildUrl('/auth/change-password'))
+            .set('Authorization', 'Bearer ' + accessToken).send({
+                currentPassword: 'passwordWrong',
+                newPassword: 'newPassword123'
+            }).set('Cookie', sessionJSON);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should reject wit Validation Error ', async () => {
+        const response = await supertest(web).patch(buildUrl('/auth/change-password'))
+            .set('Authorization', 'Bearer ' + accessToken).send({
+                currentPassword: '12as',
+                newPassword: '123a'
+            }).set('Cookie', sessionJSON);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+});
