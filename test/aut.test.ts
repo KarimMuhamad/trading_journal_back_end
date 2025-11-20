@@ -231,3 +231,38 @@ describe('POST ' + buildUrl('/auth/refresh'), () => {
     });
 
 });
+
+describe('POST' + buildUrl('/auth/email/send'), () => {
+    let userId: number;
+    let accessToken: string;
+    let sessionJSON: any;
+    const emailTesting = process.env.EMAIL_TESTING as string;
+
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', emailTesting, 'test123456');
+        const session = await AuthTestUtils.createSession('test', 'test123456');
+
+        userId = session.userId;
+        accessToken = session.accessToken;
+        sessionJSON = session.session;
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be send a verification email', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/email/send')).set('Authorization', 'Bearer ' + accessToken);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be reject if accessToken Invalid or Expired', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/email/send')).set('Authorization', 'Bearer ' + 'invalidAccessToken');
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+})

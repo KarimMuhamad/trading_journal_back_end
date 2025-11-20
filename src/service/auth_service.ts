@@ -5,6 +5,7 @@ import {
     AuthResponse,
     toAuthResponse
 } from "../model/auth_model";
+import 'dotenv/config';
 import {Validation} from "../validation/validation";
 import {AuthValidation} from "../validation/auth_validation";
 import prisma from "../application/database";
@@ -16,6 +17,7 @@ import {User} from "../../prisma/generated/client";
 import {UAParser} from "ua-parser-js";
 import logger from "../application/logger";
 import {parseCookieSession} from "../utils/parseCookieSession";
+import {Resend} from "resend";
 
 export class AuthService {
     static async register(req: AuthRequestRegister ) : Promise<AuthResponse> {
@@ -170,5 +172,37 @@ export class AuthService {
             authRes: toAuthResponse(user),
             accessToken: accessToken,
         }
+    }
+
+    static async sendEmailVerification(user: User) : Promise<void> {
+        const isUserVerified = await prisma.user.findUnique({
+            where: {
+                id: user.id,
+                is_verified: true
+            },
+        });
+
+        if (isUserVerified) throw new ErrorResponse(400, "User already verified");
+
+        const token = crypto.randomBytes(32).toString('hex');
+
+        await prisma.emailVerification.create({
+            data: {
+                user_id: user.id,
+                token: token,
+                expires_at: new Date(Date.now() + 1000 * 60 * 30)
+            }
+        });
+
+        const verificationLink = `${process.env.FRONTEND_URL}/auth/email/verify?token=${token}`;
+
+        const resend = new Resend(process.env.RESEND_API_KEY!);
+
+        await resend.emails.send({
+            from: 'onboarding@resend.dev',
+            to: user.email,
+            subject: 'Verify your email address',
+            html: `<p>Please click the following link to verify your email address: <a href="${verificationLink}">${verificationLink}</a></p>`
+        });
     }
 }

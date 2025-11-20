@@ -111,6 +111,7 @@ export const EmailVerificationScalarFieldEnum = {
   user_id: 'user_id',
   token: 'token',
   expires_at: 'expires_at',
+  used: 'used',
   created_at: 'created_at'
 } as const
 

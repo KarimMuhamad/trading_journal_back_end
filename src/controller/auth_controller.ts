@@ -121,4 +121,22 @@ export class AuthController {
             next(e);
         }
     }
+
+    static async sendEmailVerification(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            await AuthService.sendEmailVerification(req.user!);
+            res.status(200).json({
+                status: "success",
+                message: "Email verification link sent successfully"
+            });
+
+            logger.info('User send Email Verification', {email : req.user!.email.replace(/(?<=.).(?=[^@]*@)/g, '*')})
+        } catch (e: any) {
+            logger.warn("Email verification failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
 }

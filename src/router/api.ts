@@ -9,3 +9,4 @@ apiRouter.use(authMiddleware);
 
 // Auth Endpoints
 apiRouter.delete('/auth/logout', AuthController.logout);
+apiRouter.post('/auth/email/send', AuthController.sendEmailVerification);
