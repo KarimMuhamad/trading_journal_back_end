@@ -1,5 +1,5 @@
 import {
-    AuthChangePasswordRequest,
+    AuthChangePasswordRequest, AuthForgotPasswordRequest,
     AuthLoginResponse,
     AuthRequestLogin,
     AuthRequestRegister,
@@ -264,5 +264,25 @@ export class AuthService {
             <p>Your password was successfully changed.</p>
             <p>If you didn’t do this, please reset your password immediately.</p>`
         });
+    }
+
+    static async forgotPassword(req: AuthForgotPasswordRequest) : Promise<void> {
+        const forgotPasswordRequest = Validation.validate(AuthValidation.FORGOTPASSWORD, req);
+
+        const user = await prisma.user.findUnique({
+            where: {email: forgotPasswordRequest.email}
+        });
+
+        if (!user) throw new ErrorResponse(404, "User not found");
+
+        const token = crypto.randomBytes(128).toString('hex');
+
+        const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+
+
+    }
+
+    static async resetPassword(token: string, newPassword: string) : Promise<void> {
+
     }
 }

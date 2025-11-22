@@ -31,6 +31,11 @@ export type AuthChangePasswordRequest = {
     currentPassword: string;
 }
 
+export type AuthForgotPasswordRequest = {
+    email: string;
+    token?: string;
+}
+
 export function toAuthResponse(user: User): AuthResponse {
     return {
         id: user.id,

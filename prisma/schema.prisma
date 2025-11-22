@@ -11,7 +11,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -63,12 +62,12 @@ model EmailVerification {
 }
 
 model PasswordReset {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   user_id    Int
-  otp_hash   String    @db.VarChar(255)
+  token      String   @db.VarChar(255)
   expires_at DateTime
-  used_at    DateTime?
-  user       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  used       Boolean  @default(false)
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("password_resets")
 }

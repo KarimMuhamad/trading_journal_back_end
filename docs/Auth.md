@@ -268,6 +268,7 @@ Base URL: `/api.domain/v1`
   "message": "Invalid or expired access token."
 }
 ```
+---
 
 ### Forgot Password
 - Method : `POST`
@@ -282,7 +283,7 @@ Base URL: `/api.domain/v1`
 ```json
 {
   "status": "success",
-  "message": "User Found."
+  "message": "Please Check your email for reset password link."
 }
 ```
 - Response 404
@@ -300,20 +301,20 @@ Base URL: `/api.domain/v1`
 }
 ```
 
-### Send OTP Code
+### Rest Password Using Link in Email
 - Method : `POST`
-- Endpoint : `/auth/forgotPassword/sendOTP`
+- Endpoint : `/auth/forgotPassword?token=<token>`
 - Request Body
 ```json
 {
-  "email": "karim@example.com"
+  "token": "<token>"
 }
 ```
 - Response 200
 ```json
 {
   "status": "success",
-  "message": "OTP Code sent successfully. Please check your email."
+  "message": "Password Reset Succesfuly"
 }
 ```
 - Response 404
@@ -321,6 +322,12 @@ Base URL: `/api.domain/v1`
 {
   "status": "error",
   "message": "User not found."
+}
+- Response 401
+```json
+{
+  "status": "error",
+  "message": "Invalid or expired token."
 }
 ```
 - Response 429
@@ -330,50 +337,29 @@ Base URL: `/api.domain/v1`
   "message": "Too many requests. Please try again later."
 }
 ```
+---
 
-
-### Reset Password via Forgot Password Page
-- Method : `PATCH`
-- Endpoint : `/auth/resetPassword`
-- Request Body
+### Delete Account
+- Method : `DELETE`
+- Endpoint : `/auth/deleteAccount/:userId`
+- Authorization : `Bearer <accessToken>`
+- Request body
 ```json
 {
-  "email": "karim@example.com",
-  "otpCode": "123456",
-  "newPassword": "NewStrongPass!45"
+  "password": "StrongPass!23"
 }
 ```
 - Response 200
 ```json
 {
   "status": "success",
-  "message": "Password reset successfully."
-}
-```
-- Response 400
-```json
-{
-  "status": "error",
-  "message": "Invalid OTP Code."
-}
-```
-- Response 404
-```json
-{
-  "status": "error",
-  "message": "User not found."
-}
-```
-- Response 429
-```json
-{
-  "status": "error",
-  "message": "Too many requests. Please try again later."
+  "message": "Account deleted successfully."
 }
 ```
 - Response 401
 ```json
 {
-  "message": "Invalid or  access token."
+  "status": "error",
+  "message": "Invalid or expired access token."
 }
 ```
