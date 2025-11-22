@@ -1,6 +1,11 @@
 import {Request, Response, NextFunction} from "express";
 import logger from "../application/logger";
-import {AuthChangePasswordRequest, AuthRequestLogin, AuthRequestRegister} from "../model/auth_model";
+import {
+    AuthChangePasswordRequest,
+    AuthForgotPasswordRequest,
+    AuthRequestLogin,
+    AuthRequestRegister
+} from "../model/auth_model";
 import {AuthService} from "../service/auth_service";
 import {AuthUserRequest} from "../type/auth_type";
 import {ErrorResponse} from "../error/error_response";
@@ -190,6 +195,29 @@ export class AuthController {
             });
         } catch (e: any) {
             logger.warn("Request reset password link failed : ", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
+
+    static async resetPassword(req: Request, res: Response, next: NextFunction) {
+        try {
+            const request: AuthForgotPasswordRequest = {
+                token: req.query.token as string,
+                newPassword: req.body.newPassword
+            };
+
+            await AuthService.resetPassword(request);
+
+            res.status(200).json({
+                status: "success",
+                message: "Password reset successfully"
+            });
+
+        } catch (e: any) {
+            logger.warn("Reset password failed : ", {
                 message: e.message,
                 status: e.status,
             });

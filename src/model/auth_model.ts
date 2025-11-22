@@ -32,8 +32,9 @@ export type AuthChangePasswordRequest = {
 }
 
 export type AuthForgotPasswordRequest = {
-    email: string;
+    email?: string;
     token?: string;
+    newPassword?: string;
 }
 
 export function toAuthResponse(user: User): AuthResponse {

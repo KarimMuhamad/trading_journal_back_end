@@ -303,7 +303,7 @@ Base URL: `/api.domain/v1`
 
 ### Rest Password Using Link in Email
 - Method : `POST`
-- Endpoint : `/auth/forgotPassword?token=<token>`
+- Endpoint : `/forgot-password/reset?token=<token>`
 - Request Body
 ```json
 {

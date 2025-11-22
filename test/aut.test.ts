@@ -402,4 +402,69 @@ describe('POST ' + buildUrl('/auth/forgot-password'), () => {
         expect(response.status).toBe(404);
         expect(response.body.status).toBe('error');
     });
-})
+});
+
+describe('PATCH ' + buildUrl('/auth/reset-password'), () => {
+    const emailTesting = process.env.EMAIL_TESTING as string;
+    let record: any;
+
+    beforeEach(async () => {
+        await AuthTestUtils.deleteAll(); // clear user & password reset table
+        await AuthTestUtils.createUser('test', emailTesting, 'oldPassword123');
+        await supertest(web)
+            .post(buildUrl('/auth/forgot-password'))
+            .send({ email: emailTesting })
+            .expect(200);
+
+        record = await prisma.passwordReset.findFirst({});
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should reset password successfully', async () => {
+        const res = await supertest(web)
+            .patch(buildUrl('/forgot-password/reset') + '?token=' + record!.token) // inject raw token
+            .send({ newPassword: 'newPassword123' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.status).toBe('success');
+    });
+
+    it('should reject invalid token', async () => {
+        const res = await supertest(web)
+            .patch(buildUrl('/forgot-password/reset') + '?token=' + record!.token + 'as') // inject raw token
+            .send({ newPassword: 'newPassword123' });
+
+        expect(res.status).toBe(401);
+        expect(res.body.status).toBe('error');
+    });
+
+    it('should reject expired token', async () => {
+        await prisma.passwordReset.updateMany({
+            data: { expires_at: new Date(Date.now() - 1000) }
+        });
+
+        const res = await supertest(web)
+            .patch(buildUrl('/forgot-password/reset') + '?token=' + record!.token)
+            .send({ newPassword: 'newPassword123' });
+
+        expect(res.status).toBe(401);
+        expect(res.body.message).toMatch(/expired/i);
+    });
+
+    it('should reject used token', async () => {
+        await prisma.passwordReset.update({
+            where: { id: record!.id },
+            data: { used: true }
+        });
+
+        const res = await supertest(web)
+            .patch(buildUrl('/forgot-password/reset') + '?token=' + record!.token)
+            .send({ newPassword: 'newPassword123' });
+
+        expect(res.status).toBe(401);
+        expect(res.body.message).toMatch(/invalid/i);
+    });
+});

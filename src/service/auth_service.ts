@@ -297,7 +297,51 @@ export class AuthService {
         });
     }
 
-    static async resetPassword(token: string, newPassword: string) : Promise<void> {
+    static async resetPassword(req: AuthForgotPasswordRequest) : Promise<void> {
+        const token = req.token;
 
+        const passwordReset = await prisma.passwordReset.findFirst({
+            where: {
+                token: token,
+                used: false,
+                expires_at: {gt: new Date()}
+            }
+        });
+
+        if (!passwordReset) throw new ErrorResponse(401, "Invalid or expired password reset link");
+
+        const user = await prisma.user.findUnique({
+            where: {id: passwordReset.user_id}
+        });
+
+        if (!user) throw new ErrorResponse(404, "User not provided");
+
+        const newPassword = await argon2.hash(req.newPassword!);
+
+        await prisma.user.update({
+            where: {id: passwordReset.user_id},
+            data: {password: newPassword}
+        });
+
+        await prisma.passwordReset.update({
+            where:{id: passwordReset.id},
+            data: {used: true}
+        });
+
+        await prisma.auth_session.updateMany({
+            where: {user_id: passwordReset.user_id},
+            data: {revoked_at: new Date()}
+        });
+
+        logger.warn('User password changed from reset password link, All Session Revoked :', {userId: user.id});
+
+        await this.resend.emails.send({
+            from: "onboarding@resend.dev",
+            to: user.email,
+            subject: "Your password has been changed",
+            html: `
+            <p>Your password was successfully changed.</p>
+            <p>If you didn’t do this, please reset your password immediately.</p>`
+        });
     }
 }
