@@ -179,4 +179,21 @@ export class AuthController {
             next(e);
         }
     }
+
+    static async forgotPassword(req: Request, res: Response, next: NextFunction) {
+        try {
+            const email = req.body;
+            await AuthService.forgotPassword(email);
+            res.status(200).json({
+                status: "success",
+                message: "Password reset link sent successfully"
+            });
+        } catch (e: any) {
+            logger.warn("Request reset password link failed : ", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
 }

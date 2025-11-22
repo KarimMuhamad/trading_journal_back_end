@@ -1,5 +1,10 @@
-import { PrismaClient } from "../../prisma/generated/client";
 import logger from "./logger";
+import {PrismaPg} from "@prisma/adapter-pg";
+import {PrismaClient} from "../../prisma/generated/client";
+
+const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL as string,
+});
 
 export const prisma = new PrismaClient({
     log: [
@@ -7,7 +12,8 @@ export const prisma = new PrismaClient({
         { level: 'info', emit: 'event'},
         { level: 'warn', emit: 'event'},
         { level: 'error', emit: 'event'}
-    ]
+    ],
+    adapter
 });
 
 prisma.$on('warn', (e) => {

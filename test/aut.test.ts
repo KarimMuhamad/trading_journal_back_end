@@ -376,3 +376,30 @@ describe('PATCH ' + buildUrl('/auth/change-password'), () => {
         expect(response.body.status).toBe('error');
     });
 });
+
+describe('POST ' + buildUrl('/auth/forgot-password'), () => {
+    const emailTesting = process.env.EMAIL_TESTING as string;
+
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', emailTesting, 'test123456');
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be able to send reset password link', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/forgot-password')).send({email: emailTesting});
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be not sending reset password link if email invalid', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/forgot-password')).send({email: "salah@dev.com"});
+
+
+        expect(response.status).toBe(404);
+        expect(response.body.status).toBe('error');
+    });
+})

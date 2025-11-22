@@ -275,11 +275,26 @@ export class AuthService {
 
         if (!user) throw new ErrorResponse(404, "User not found");
 
-        const token = crypto.randomBytes(128).toString('hex');
+        const token = crypto.randomBytes(32).toString('hex');
 
         const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
 
+        const tokenExpiredAt = new Date(Date.now() + 1000 * 60 * 4);
 
+        await prisma.passwordReset.create({
+            data: {
+                user_id: user.id,
+                token: token,
+                expires_at: tokenExpiredAt
+            }
+        });
+
+        await this.resend.emails.send({
+            from: 'onboarding@resend.dev',
+            to: user.email,
+            subject: 'Your Requested Password Reset Link',
+            html: `<p>Please click the following link to Reset your password: <a href="${resetPasswordLink}">${resetPasswordLink}</a></p>`
+        });
     }
 
     static async resetPassword(token: string, newPassword: string) : Promise<void> {
