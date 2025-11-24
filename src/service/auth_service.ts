@@ -331,8 +331,8 @@ export class AuthService {
         });
         if (!user) throw new ErrorResponse(401, "User no longer exists");
 
-        const requestNewPassword = Validation.validate(AuthValidation.CHANGEPASSWORD, req.newPassword!);
-        const newPassword = await argon2.hash(requestNewPassword);
+        const requestNewPassword = Validation.validate(AuthValidation.RESETPASSWORD, req);
+        const newPassword = await argon2.hash(requestNewPassword.newPassword!);
 
         await prisma.$transaction(async (tx) => {
             const mark = await tx.passwordReset.updateMany({

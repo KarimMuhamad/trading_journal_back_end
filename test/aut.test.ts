@@ -199,6 +199,7 @@ describe('POST ' + buildUrl('/auth/refresh'), () => {
 
     it('should be generate new Access Token', async () => {
         const response = await supertest(web).post(buildUrl('/auth/refresh')).set('Cookie', sessionJSON);
+        console.log('Refresh Token session : ' + sessionJSON);
 
         expect(response.status).toBe(200);
         expect(response.body.status).toBe('success');
@@ -337,7 +338,7 @@ describe('PATCH ' + buildUrl('/auth/change-password'), () => {
         sessionJSON = session.session;
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         await AuthTestUtils.deleteAll();
     });
 
@@ -348,7 +349,7 @@ describe('PATCH ' + buildUrl('/auth/change-password'), () => {
                 newPassword: 'newPassword123'
             }).set('Cookie', sessionJSON);
 
-        console.log(sessionJSON);
+        console.log('Change Passowrd session : ' + sessionJSON);
 
         expect(response.status).toBe(200);
         expect(response.body.status).toBe('success');

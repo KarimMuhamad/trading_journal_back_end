@@ -19,10 +19,10 @@ export class AuthTestUtils {
             'X-Forwarded-For': '127.0.0.1'
         });
 
-        return {
+       return {
             userId: response.body.data.id,
             accessToken: response.body.accessToken,
             session: response.headers['set-cookie'][0].split(';')[0]
-        }
+       }
     }
 }

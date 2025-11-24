@@ -13,10 +13,15 @@ export class AuthValidation {
     });
 
     static readonly CHANGEPASSWORD: ZodType = z.object({
+        currentPassword: z.string().min(8).max(50),
         newPassword: z.string().min(8).max(50)
     });
 
     static readonly FORGOTPASSWORD: ZodType = z.object({
         email: z.string().email().min(1).max(50),
-    })
+    });
+
+    static readonly RESETPASSWORD: ZodType = z.object({
+        newPassword: z.string().min(8).max(50)
+    });
 }
