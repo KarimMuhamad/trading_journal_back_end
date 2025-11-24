@@ -13,7 +13,6 @@ export class AuthValidation {
     });
 
     static readonly CHANGEPASSWORD: ZodType = z.object({
-        currentPassword: z.string().min(8).max(50),
         newPassword: z.string().min(8).max(50)
     });
 

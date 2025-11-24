@@ -218,14 +218,18 @@ export class AuthService {
 
         if (!verification) throw new ErrorResponse(401, "Invalid or expired verification link");
 
-        await prisma.user.update({
-            where: {id: verification.user_id},
-            data: {is_verified: true}
-        });
+        await prisma.$transaction(async (tx) => {
+           const updated = await tx.emailVerification.updateMany({
+               where: {id: verification.id, used: false},
+               data: {used: true}
+           });
 
-        await prisma.emailVerification.update({
-            where: {id: verification.id},
-            data: {used: true}
+           if (updated.count === 0) throw new ErrorResponse(401, "Verification link already used");
+
+           await tx.user.update({
+               where: {id: verification.user_id},
+               data: {is_verified: true}
+           });
         });
     }
 
@@ -234,36 +238,44 @@ export class AuthService {
         const changePasswordRequest = Validation.validate(AuthValidation.CHANGEPASSWORD, req);
 
         const isCurrentPasswordValid = await argon2.verify(user.password, changePasswordRequest.currentPassword);
-
-        if (!isCurrentPasswordValid) {
-            throw new ErrorResponse(401, "Invalid current password");
-        }
+        if (!isCurrentPasswordValid) throw new ErrorResponse(401, "Invalid current password");
 
         const hashedNewPassword = await argon2.hash(changePasswordRequest.newPassword);
 
-        await prisma.user.update({
-            where: {id: user.id},
-            data: {password: hashedNewPassword}
+        await prisma.$transaction(async (tx) => {
+           await tx.user.update({
+               where: {id: user.id},
+               data: {password: hashedNewPassword}
+           });
+
+           const result = await tx.auth_session.updateMany({
+               where: {
+                   user_id: user.id,
+                   id: {not: sid},
+                   revoked_at: null
+               },
+               data: {revoked_at: new Date()}
+           });
+
+            logger.warn('User password changed from setting pages, All Session Revoked :', {
+                userID: user.id,
+                revokedCount: result.count,
+                sessionID: sid
+            });
         });
 
-        await prisma.auth_session.updateMany({
-            where: {
-                user_id: user.id,
-                id: {not: sid}
-            },
-            data: {revoked_at: new Date()}
-        });
-
-        logger.warn('User password changed from session :', {sessionJSON});
-
-        await this.resend.emails.send({
-            from: "onboarding@resend.dev",
-            to: user.email,
-            subject: "Your password has been changed",
-            html: `
+        try {
+            await this.resend.emails.send({
+                from: "onboarding@resend.dev",
+                to: user.email,
+                subject: "Your password has been changed",
+                html: `
             <p>Your password was successfully changed.</p>
             <p>If you didn’t do this, please reset your password immediately.</p>`
-        });
+            });
+        } catch (e: any) {
+            logger.error('Failed to send password change confirmation email', {error: e.message});
+        }
     }
 
     static async forgotPassword(req: AuthForgotPasswordRequest) : Promise<void> {
@@ -289,12 +301,16 @@ export class AuthService {
             }
         });
 
-        await this.resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: user.email,
-            subject: 'Your Requested Password Reset Link',
-            html: `<p>Please click the following link to Reset your password: <a href="${resetPasswordLink}">${resetPasswordLink}</a></p>`
-        });
+        try {
+            await this.resend.emails.send({
+                from: 'onboarding@resend.dev',
+                to: user.email,
+                subject: 'Your Requested Password Reset Link',
+                html: `<p>Please click the following link to Reset your password: <a href="${resetPasswordLink}">${resetPasswordLink}</a></p>`
+            });
+        } catch (e: any) {
+            logger.error('Failed to send password reset email', {error: e.message});
+        }
     }
 
     static async resetPassword(req: AuthForgotPasswordRequest) : Promise<void> {
@@ -313,35 +329,42 @@ export class AuthService {
         const user = await prisma.user.findUnique({
             where: {id: passwordReset.user_id}
         });
+        if (!user) throw new ErrorResponse(401, "User no longer exists");
 
-        if (!user) throw new ErrorResponse(404, "User not provided");
+        const requestNewPassword = Validation.validate(AuthValidation.CHANGEPASSWORD, req.newPassword!);
+        const newPassword = await argon2.hash(requestNewPassword);
 
-        const newPassword = await argon2.hash(req.newPassword!);
+        await prisma.$transaction(async (tx) => {
+            const mark = await tx.passwordReset.updateMany({
+                where: {id: passwordReset.id, used: false},
+                data: {used: true}
+            });
+            if (mark.count === 0) throw new ErrorResponse(401, "Password reset link already used");
 
-        await prisma.user.update({
-            where: {id: passwordReset.user_id},
-            data: {password: newPassword}
+            await tx.user.update({
+                where: {id: passwordReset.user_id},
+                data: {password: newPassword}
+            });
+
+            await tx.auth_session.updateMany({
+                where: {user_id: passwordReset.user_id},
+                data: {revoked_at: new Date()}
+            });
+
+            logger.warn('User password changed from reset password link, All Session Revoked :', {userId: passwordReset.user_id});
         });
 
-        await prisma.passwordReset.update({
-            where:{id: passwordReset.id},
-            data: {used: true}
-        });
-
-        await prisma.auth_session.updateMany({
-            where: {user_id: passwordReset.user_id},
-            data: {revoked_at: new Date()}
-        });
-
-        logger.warn('User password changed from reset password link, All Session Revoked :', {userId: user.id});
-
-        await this.resend.emails.send({
-            from: "onboarding@resend.dev",
-            to: user.email,
-            subject: "Your password has been changed",
-            html: `
+        try {
+            await this.resend.emails.send({
+                from: "onboarding@resend.dev",
+                to: user.email,
+                subject: "Your password has been changed",
+                html: `
             <p>Your password was successfully changed.</p>
             <p>If you didn’t do this, please reset your password immediately.</p>`
-        });
+            });
+        } catch (e: any) {
+            logger.error('Failed to send password reset confirmation email', {error: e.message});
+        }
     }
 }
