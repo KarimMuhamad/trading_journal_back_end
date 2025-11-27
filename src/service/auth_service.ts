@@ -19,6 +19,7 @@ import {UAParser} from "ua-parser-js";
 import logger from "../application/logger";
 import {parseCookieSession} from "../utils/parseCookieSession";
 import {Resend} from "resend";
+import email_service from "../email/services/email_service";
 
 export class AuthService {
     private static resend : Resend = new Resend(process.env.RESEND_API_KEY!);
@@ -189,21 +190,21 @@ export class AuthService {
 
         const token = crypto.randomBytes(32).toString('hex');
 
+        const expiredTime = new Date(Date.now() + 1000 * 60 * 30);
+
         await prisma.emailVerification.create({
             data: {
                 user_id: user.id,
                 token: token,
-                expires_at: new Date(Date.now() + 1000 * 60 * 30)
+                expires_at: expiredTime
             }
         });
 
-        const verificationLink = `${process.env.FRONTEND_URL}/auth/email/verify?token=${token}`;
-
-        await this.resend.emails.send({
-            from: 'onboarding@resend.dev',
-            to: user.email,
-            subject: 'Verify your email address',
-            html: `<p>Please click the following link to verify your email address: <a href="${verificationLink}">${verificationLink}</a></p>`
+        await email_service.sendEmailVerificationEmail({
+            email: user.email,
+            username: user.username,
+            verificationToken: token,
+            expiryTime: expiredTime.toLocaleString(),
         });
     }
 
@@ -233,7 +234,7 @@ export class AuthService {
         });
     }
 
-    static async changePassword(user:User, req: AuthChangePasswordRequest, sessionJSON: any) : Promise<void> {
+    static async changePassword(user:User, req: AuthChangePasswordRequest, sessionJSON: any, userAgent: string) : Promise<void> {
         const {sid} = parseCookieSession(sessionJSON);
         const changePasswordRequest = Validation.validate(AuthValidation.CHANGEPASSWORD, req);
 
@@ -264,18 +265,15 @@ export class AuthService {
             });
         });
 
-        try {
-            await this.resend.emails.send({
-                from: "onboarding@resend.dev",
-                to: user.email,
-                subject: "Your password has been changed",
-                html: `
-            <p>Your password was successfully changed.</p>
-            <p>If you didn’t do this, please reset your password immediately.</p>`
-            });
-        } catch (e: any) {
-            logger.error('Failed to send password change confirmation email', {error: e.message});
-        }
+        const uaParser = new UAParser(userAgent);
+        const uaResult = uaParser.getResult();
+
+        await email_service.sendPasswordChangedNotification({
+            email: user.email,
+            username: user.username,
+            changedAt: new Date().toLocaleString(),
+            deviceInfo: `${uaResult.device.model} | ${uaResult.browser.name} | ${uaResult.os.name}`
+        })
     }
 
     static async forgotPassword(req: AuthForgotPasswordRequest) : Promise<void> {
@@ -289,9 +287,7 @@ export class AuthService {
 
         const token = crypto.randomBytes(32).toString('hex');
 
-        const resetPasswordLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-
-        const tokenExpiredAt = new Date(Date.now() + 1000 * 60 * 4);
+        const tokenExpiredAt = new Date(Date.now() + 1000 * 60 * 5);
 
         await prisma.passwordReset.create({
             data: {
@@ -301,19 +297,15 @@ export class AuthService {
             }
         });
 
-        try {
-            await this.resend.emails.send({
-                from: 'onboarding@resend.dev',
-                to: user.email,
-                subject: 'Your Requested Password Reset Link',
-                html: `<p>Please click the following link to Reset your password: <a href="${resetPasswordLink}">${resetPasswordLink}</a></p>`
-            });
-        } catch (e: any) {
-            logger.error('Failed to send password reset email', {error: e.message});
-        }
+        await email_service.sendResetPasswordEmail({
+            email: user.email,
+            resetToken: token,
+            username: user.username,
+            expiryTIme: tokenExpiredAt.toLocaleString()
+        })
     }
 
-    static async resetPassword(req: AuthForgotPasswordRequest) : Promise<void> {
+    static async resetPassword(req: AuthForgotPasswordRequest, userAgent: string) : Promise<void> {
         const token = req.token;
 
         const passwordReset = await prisma.passwordReset.findFirst({
@@ -329,10 +321,13 @@ export class AuthService {
         const user = await prisma.user.findUnique({
             where: {id: passwordReset.user_id}
         });
-        if (!user) throw new ErrorResponse(401, "User no longer exists");
+        if (!user) throw new ErrorResponse(404, "User no longer exists");
 
         const requestNewPassword = Validation.validate(AuthValidation.RESETPASSWORD, req);
         const newPassword = await argon2.hash(requestNewPassword.newPassword!);
+
+        const uaParser = new UAParser(userAgent);
+        const uaResult = uaParser.getResult();
 
         await prisma.$transaction(async (tx) => {
             const mark = await tx.passwordReset.updateMany({
@@ -354,17 +349,11 @@ export class AuthService {
             logger.warn('User password changed from reset password link, All Session Revoked :', {userId: passwordReset.user_id});
         });
 
-        try {
-            await this.resend.emails.send({
-                from: "onboarding@resend.dev",
-                to: user.email,
-                subject: "Your password has been changed",
-                html: `
-            <p>Your password was successfully changed.</p>
-            <p>If you didn’t do this, please reset your password immediately.</p>`
-            });
-        } catch (e: any) {
-            logger.error('Failed to send password reset confirmation email', {error: e.message});
-        }
+        await email_service.sendPasswordChangedNotification({
+            email: user.email,
+            username: user.username,
+            changedAt: new Date().toLocaleString(),
+            deviceInfo: `${uaResult.device.model} | ${uaResult.browser.name} | ${uaResult.os.name}`
+        });
     }
 }

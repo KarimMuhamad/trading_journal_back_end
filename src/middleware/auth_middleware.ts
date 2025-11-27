@@ -1,4 +1,4 @@
-import {AuthUserRequest, JWTDecoded} from "../type/auth_type";
+import {AuthUserRequest, JWTDecoded} from "../types/auth_type";
 import {Response, NextFunction} from "express";
 import {ErrorResponse} from "../error/error_response";
 import jwt from "jsonwebtoken";

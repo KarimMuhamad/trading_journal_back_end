@@ -7,7 +7,7 @@ import {
     AuthRequestRegister
 } from "../model/auth_model";
 import {AuthService} from "../service/auth_service";
-import {AuthUserRequest} from "../type/auth_type";
+import {AuthUserRequest} from "../types/auth_type";
 import {ErrorResponse} from "../error/error_response";
 
 export class AuthController {
@@ -168,7 +168,7 @@ export class AuthController {
     static async changePassword(req: AuthUserRequest, res: Response, next: NextFunction) {
         try {
             const session = req.cookies.session;
-            await AuthService.changePassword(req.user!, {currentPassword: req.body.currentPassword, newPassword: req.body.newPassword}, session);
+            await AuthService.changePassword(req.user!, {currentPassword: req.body.currentPassword, newPassword: req.body.newPassword}, session, req.headers['user-agent'] as string);
             res.status(200).json({
                 status: "success",
                 message: "Password changed successfully"
@@ -209,7 +209,7 @@ export class AuthController {
                 newPassword: req.body.newPassword
             };
 
-            await AuthService.resetPassword(request);
+            await AuthService.resetPassword(request, req.headers['user-agent'] as string);
 
             res.status(200).json({
                 status: "success",

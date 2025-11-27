@@ -347,9 +347,10 @@ describe('PATCH ' + buildUrl('/auth/change-password'), () => {
             .set('Authorization', 'Bearer ' + accessToken).send({
                 currentPassword: 'currentPassword123',
                 newPassword: 'newPassword123'
-            }).set('Cookie', sessionJSON);
-
-        console.log('Change Passowrd session : ' + sessionJSON);
+            }).set('Cookie', sessionJSON).set({
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:145.0) Gecko/20100101 Firefox/145.0',
+                'X-Forwarded-For': '127.0.0.1'
+            });
 
         expect(response.status).toBe(200);
         expect(response.body.status).toBe('success');
@@ -415,7 +416,7 @@ describe('PATCH ' + buildUrl('/auth/reset-password'), () => {
         await supertest(web)
             .post(buildUrl('/auth/forgot-password'))
             .send({ email: emailTesting })
-            .expect(200);
+            .expect(200)
 
         record = await prisma.passwordReset.findFirst({});
     });
@@ -427,7 +428,10 @@ describe('PATCH ' + buildUrl('/auth/reset-password'), () => {
     it('should reset password successfully', async () => {
         const res = await supertest(web)
             .patch(buildUrl('/forgot-password/reset') + '?token=' + record!.token) // inject raw token
-            .send({ newPassword: 'newPassword123' });
+            .send({ newPassword: 'newPassword123' }).set({
+                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:145.0) Gecko/20100101 Firefox/145.0',
+                'X-Forwarded-For': '127.0.0.1'
+            });
 
         expect(res.status).toBe(200);
         expect(res.body.status).toBe('success');
