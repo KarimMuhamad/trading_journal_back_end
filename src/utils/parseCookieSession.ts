@@ -1,6 +1,6 @@
 import {ErrorResponse} from "../error/error_response";
 
-export const parseCookieSession = (sessionJSON: any) : {sid: number, rt: string} => {
+export const parseCookieSession = (sessionJSON: any) : {sid: string, rt: string} => {
     if (!sessionJSON) throw new ErrorResponse(401, "Unauthorized, no session provided");
 
     try {

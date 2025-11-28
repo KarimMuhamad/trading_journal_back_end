@@ -18,11 +18,9 @@ import {User} from "../../prisma/generated/client";
 import {UAParser} from "ua-parser-js";
 import logger from "../application/logger";
 import {parseCookieSession} from "../utils/parseCookieSession";
-import {Resend} from "resend";
 import email_service from "../email/services/email_service";
 
 export class AuthService {
-    private static resend : Resend = new Resend(process.env.RESEND_API_KEY!);
 
     static async register(req: AuthRequestRegister ) : Promise<AuthResponse> {
         const registerRequest = Validation.validate(AuthValidation.REGISTER, req);

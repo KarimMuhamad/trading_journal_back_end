@@ -1,7 +1,7 @@
 import { User } from "../../prisma/generated/client";
 
 export type AuthResponse = {
-    id: number;
+    id: string;
     username: string;
     email: string;
     isVerified: boolean;
@@ -21,7 +21,7 @@ export type AuthRequestLogin = {
 export type AuthLoginResponse = {
     authRes: AuthResponse;
     accessToken: string;
-    session_id?: number;
+    session_id?: string;
     token?: string;
     refreshTokenExpiresIn?: number;
 }

@@ -182,7 +182,7 @@ describe('DELETE ' + buildUrl('/auth/logout'), () => {
 });
 
 describe('POST ' + buildUrl('/auth/refresh'), () => {
-    let userId: number;
+    let userId: string;
     let sessionJSON: any;
 
     beforeEach(async ()=> {
@@ -270,7 +270,7 @@ describe('POST' + buildUrl('/auth/email/send'), () => {
 
 
 describe('GET ' + buildUrl('/auth/email/verify'), () => {
-    let userId: number;
+    let userId: string;
     let accessToken: string;
     let sessionJSON: any;
     const emailTesting = process.env.EMAIL_TESTING as string;
