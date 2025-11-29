@@ -18,24 +18,39 @@ export type AuthRequestLogin = {
     password: string;
 }
 
-export type AuthLoginResponse = {
+export type AuthLoginSuccess = {
+    status: "SUCCESS";
     authRes: AuthResponse;
     accessToken: string;
-    session_id?: string;
-    token?: string;
-    refreshTokenExpiresIn?: number;
-}
+    session_id: string;
+    token: string;
+    refreshTokenExpiresIn: number;
+};
+
+export type AuthLoginNeedRecover = {
+    status: "RECOVERY_NEEDED";
+    message: string;
+    token: string;
+    recovery_period: number;
+};
+
+export type AuthLoginResponse = AuthLoginSuccess | AuthLoginNeedRecover;
+
+export type AuthRefreshAccessTokenResponse = {
+    authRes: AuthResponse;
+    accessToken: string;
+};
 
 export type AuthChangePasswordRequest = {
     newPassword: string;
     currentPassword: string;
-}
+};
 
 export type AuthForgotPasswordRequest = {
     email?: string;
     token?: string;
     newPassword?: string;
-}
+};
 
 export function toAuthResponse(user: User): AuthResponse {
     return {
@@ -44,4 +59,4 @@ export function toAuthResponse(user: User): AuthResponse {
         email: user.email,
         isVerified: user.is_verified
     };
-}
+};

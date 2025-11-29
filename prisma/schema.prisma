@@ -25,11 +25,12 @@ model User {
   deleted_at         DateTime?
   deleted_expires_at DateTime?
 
-  auth_session       auth_session[]
-  emailVerifications EmailVerification[]
-  passwordResets     PasswordReset[]
-  accounts           Accounts[]
-  playbooks          Playbooks[]
+  auth_session          auth_session[]
+  emailVerifications    EmailVerification[]
+  passwordResets        PasswordReset[]
+  accounts              Accounts[]
+  playbooks             Playbooks[]
+  accountRecoveryTokens AccountRecoveryTokens[]
 
   @@index([deleted_at, deleted_expires_at])
   @@map("users")
@@ -74,6 +75,19 @@ model PasswordReset {
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("password_resets")
+}
+
+model AccountRecoveryTokens {
+  id         String   @id @default(uuid(7)) @db.Uuid
+  user_id    String   @db.Uuid
+  token      String   @unique @db.VarChar(255)
+  expires_at DateTime
+  used       Boolean  @default(false)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@map("account_recovery_tokens")
 }
 
 model Accounts {

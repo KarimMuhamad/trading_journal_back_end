@@ -1,4 +1,4 @@
-import {Request, Response, NextFunction} from "express";
+import { Request, Response, NextFunction } from "express";
 import logger from "../application/logger";
 import {
     AuthChangePasswordRequest,
@@ -6,14 +6,14 @@ import {
     AuthRequestLogin,
     AuthRequestRegister
 } from "../model/auth_model";
-import {AuthService} from "../service/auth_service";
-import {AuthUserRequest} from "../types/auth_type";
-import {ErrorResponse} from "../error/error_response";
+import { AuthService } from "../service/auth_service";
+import { AuthUserRequest } from "../types/auth_type";
+import { ErrorResponse } from "../error/error_response";
 
 export class AuthController {
     static async register(req: Request, res: Response, next: NextFunction) {
         try {
-            const request : AuthRequestRegister = req.body as AuthRequestRegister;
+            const request: AuthRequestRegister = req.body as AuthRequestRegister;
             const response = await AuthService.register(request);
             res.status(201).json({
                 status: "success",
@@ -36,32 +36,46 @@ export class AuthController {
 
     static async login(req: Request, res: Response, next: NextFunction) {
         try {
-            const request : AuthRequestLogin = req.body as AuthRequestLogin;
+            const request: AuthRequestLogin = req.body as AuthRequestLogin;
             const response = await AuthService.login(request, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string);
 
-            const sessionJSON = JSON.stringify({
-                sid: response.session_id,
-                rt: response.token
-            });
+            if (response.status === "RECOVERY_NEEDED") {
+                res.status(200).json({
+                    status: "RECOVERY_NEEDED",
+                    message: response.message,
+                    token: response.token,
+                    recovery_period: response.recovery_period
+                });
 
-            res.cookie('session', sessionJSON, {
-                httpOnly: true,
-                secure: true,
-                sameSite: 'strict',
-                maxAge: response.refreshTokenExpiresIn! - Date.now()
-            });
+                logger.info('User login need recovery', {
+                    identifier: request.identifier.replace(/(?<=.).(?=[^@]*@)/g, '*'),
+                });
+            }
 
-            res.status(200).json({
-                status: "success",
-                message: "User logged in successfully",
-                data: response.authRes,
-                accessToken: response.accessToken
-            });
+            if (response.status === "SUCCESS") {
+                const sessionJSON = JSON.stringify({
+                    sid: response.session_id,
+                    rt: response.token
+                });
 
-            logger.info('User logged in', {
-                identifier: request.identifier.replace(/(?<=.).(?=[^@]*@)/g, '*'),
-            });
+                res.cookie('session', sessionJSON, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: 'strict',
+                    maxAge: response.refreshTokenExpiresIn! - Date.now()
+                });
 
+                res.status(200).json({
+                    status: "success",
+                    message: "User logged in successfully",
+                    data: response.authRes,
+                    accessToken: response.accessToken
+                });
+
+                logger.info('User logged in', {
+                    identifier: request.identifier.replace(/(?<=.).(?=[^@]*@)/g, '*'),
+                });
+            }
         } catch (e: any) {
             logger.warn("User Login failed", {
                 message: e.message,
@@ -111,7 +125,7 @@ export class AuthController {
                 accessToken: response.accessToken
             });
 
-            logger.info('User access token refreshed', {username: response.authRes.username});
+            logger.info('User access token refreshed', { username: response.authRes.username });
 
         } catch (e: any) {
             logger.warn("Access token refresh failed", {
@@ -135,7 +149,7 @@ export class AuthController {
                 message: "Email verification link sent successfully"
             });
 
-            logger.info('User send Email Verification', {email : req.user!.email.replace(/(?<=.).(?=[^@]*@)/g, '*')})
+            logger.info('User send Email Verification', { email: req.user!.email.replace(/(?<=.).(?=[^@]*@)/g, '*') })
         } catch (e: any) {
             logger.warn("Email verification failed", {
                 message: e.message,
@@ -154,7 +168,7 @@ export class AuthController {
                 message: "Email verified successfully"
             });
 
-            logger.info('Verification email link clicked', {query: req.url});
+            logger.info('Verification email link clicked', { query: req.url });
 
         } catch (e: any) {
             logger.warn("Email verification failed", {
@@ -168,13 +182,13 @@ export class AuthController {
     static async changePassword(req: AuthUserRequest, res: Response, next: NextFunction) {
         try {
             const session = req.cookies.session;
-            await AuthService.changePassword(req.user!, {currentPassword: req.body.currentPassword, newPassword: req.body.newPassword}, session, req.headers['user-agent'] as string);
+            await AuthService.changePassword(req.user!, { currentPassword: req.body.currentPassword, newPassword: req.body.newPassword }, session, req.headers['user-agent'] as string);
             res.status(200).json({
                 status: "success",
                 message: "Password changed successfully"
             });
 
-            logger.info('User change password', {username: req.user!.username});
+            logger.info('User change password', { username: req.user!.username });
 
         } catch (e: any) {
             logger.warn("Password change failed", {
@@ -193,6 +207,9 @@ export class AuthController {
                 status: "success",
                 message: "Password reset link sent successfully"
             });
+
+            logger.info("Password reset link requested for email : ", { email: email.email.replace(/(?<=.).(?=[^@]*@)/g, '*') });
+
         } catch (e: any) {
             logger.warn("Request reset password link failed : ", {
                 message: e.message,
@@ -216,8 +233,30 @@ export class AuthController {
                 message: "Password reset successfully"
             });
 
+            logger.info("Password reset successfully with token : ", { token: request.token });
+
         } catch (e: any) {
             logger.warn("Reset password failed : ", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
+
+    static async recoveryAccount(req: Request, res: Response, next: NextFunction) {
+        try {
+            const token = req.query.token as string;
+            await AuthService.recoveryAccount(token);
+            res.status(200).json({
+                status: "success",
+                message: "Account recovery successfully"
+            });
+
+            logger.info("Account recovered successfully with token : ", { token: token });
+
+        } catch (e: any) {
+            logger.warn("Account recovery failed : ", {
                 message: e.message,
                 status: e.status,
             });
