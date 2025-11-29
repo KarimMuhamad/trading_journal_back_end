@@ -548,3 +548,82 @@ describe('PRISMA EXTENSION - softDeleteExtension', () => {
         expect(user!.username).toBe('test4');
     });
 });
+
+describe('POST ' + buildUrl('/auth/recovery?token=<token>'), () => {
+    let token: string;
+
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
+        await prisma.user.update({
+            where: { username: 'test' },
+            data: { deleted_at: new Date(), deleted_expires_at: new Date(Date.now() + 1000 * 60 * 30) }
+        });
+        await supertest(web).post(buildUrl('/auth/login')).send({
+            identifier: 'test',
+            password: 'test123456'
+        });
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be able to recover soft deleted account', async () => {
+        const record = await prisma.accountRecoveryTokens.findFirst({
+            where: { user: { username: 'test' } }
+        });
+
+        token = record!.token;
+
+        const response = await supertest(web).post(buildUrl('/auth/recovery') + '?token=' + token);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+
+        const user = await prisma.user.findUnique({
+            where: { username: 'test' }
+        });
+
+        expect(user!.deleted_expires_at).toBeNull();
+        expect(user!.deleted_at).toBeNull();
+    });
+
+    it('should reject invalid token', async () => {
+        const response = await supertest(web).post(buildUrl('/auth/recovery') + '?token=' + 'invalidToken');
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should reject expired token', async () => {
+        const record = await prisma.accountRecoveryTokens.findFirst({
+            where: { user: { username: 'test' } }
+        });
+
+        await prisma.accountRecoveryTokens.update({
+            where: { id: record!.id },
+            data: { expires_at: new Date(Date.now() - 1000) }
+        });
+
+        const response = await supertest(web).post(buildUrl('/auth/recovery') + '?token=' + record!.token);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should reject used token', async () => {
+        const record = await prisma.accountRecoveryTokens.findFirst({
+            where: { user: { username: 'test' } }
+        });
+
+        await prisma.accountRecoveryTokens.update({
+            where: { id: record!.id },
+            data: { used: true }
+        });
+
+        const response = await supertest(web).post(buildUrl('/auth/recovery') + '?token=' + record!.token);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+    });
+});

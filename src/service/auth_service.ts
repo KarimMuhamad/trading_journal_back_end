@@ -81,7 +81,7 @@ export class AuthService {
             const token = crypto.randomBytes(32).toString('hex');
             const tokenExpiredAt = new Date(Date.now() + 1000 * 60 * 5); // 5 minutes
 
-            await prisma.accountRecoveryToken.create({
+            await prisma.accountRecoveryTokens.create({
                 data: {
                     user_id: user.id,
                     token: token,
@@ -383,7 +383,7 @@ export class AuthService {
     }
 
     static async recoveryAccount(token: string): Promise<void> {
-        const recoveryToken = await prisma.accountRecoveryToken.findFirst({
+        const recoveryToken = await prisma.accountRecoveryTokens.findFirst({
             where: {
                 token: token,
                 used: false,
@@ -394,7 +394,7 @@ export class AuthService {
         if (!recoveryToken) throw new ErrorResponse(401, "Invalid or expired account recovery token");
 
         await prisma.$transaction(async (tx) => {
-            const mark = await tx.accountRecoveryToken.update({
+            await tx.accountRecoveryTokens.update({
                 where: { token: recoveryToken.token },
                 data: { used: true }
             });
