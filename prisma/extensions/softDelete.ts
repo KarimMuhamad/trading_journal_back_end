@@ -1,0 +1,51 @@
+import { Prisma } from "../generated/client";
+
+export const softDeleteExtension = Prisma.defineExtension({
+    name: 'softDelete',
+
+    query: {
+        user: {
+            async findMany({ args, query }) {
+                args.where = { ...args.where, deleted_at: null };
+                return query(args);
+            },
+
+            async findFirst({ args, query }) {
+                args.where = { ...args.where, deleted_at: null };
+                return query(args);
+            },
+
+            async findUnique({ args, query }) {
+                if ((args.where as Record<string, any>)?.includeDeleted) {
+                    delete (args.where as Record<string, any>)?.includeDeleted;
+                    return query(args);
+                }
+
+                args.where = { ...args.where, deleted_at: null };
+                return query(args);
+            }
+        },
+
+        playbooks: {
+            async findMany({ args, query }) {
+                args.where = { ...args.where, deleted_at: null };
+                return query(args);
+            },
+
+            async findFirst({ args, query }) {
+                args.where = { ...args.where, deleted_at: null };
+                return query(args);
+            },
+
+            async findUnique({ args, query }) {
+                if ((args.where as Record<string, any>)?.includeDeleted) {
+                    delete (args.where as Record<string, any>)?.includeDeleted;
+                    return query(args);
+                }
+
+                args.where = { ...args.where, deleted_at: null };
+                return query(args);
+            }
+        }
+    }
+});

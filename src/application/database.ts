@@ -1,6 +1,7 @@
 import logger from "./logger";
-import {PrismaPg} from "@prisma/adapter-pg";
-import {PrismaClient} from "../../prisma/generated/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../../prisma/generated/client";
+import { softDeleteExtension } from "../../prisma/extensions/softDelete";
 
 const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL as string,
@@ -8,10 +9,10 @@ const adapter = new PrismaPg({
 
 export const prisma = new PrismaClient({
     log: [
-        { level: 'query', emit: 'event'},
-        { level: 'info', emit: 'event'},
-        { level: 'warn', emit: 'event'},
-        { level: 'error', emit: 'event'}
+        { level: 'query', emit: 'event' },
+        { level: 'info', emit: 'event' },
+        { level: 'warn', emit: 'event' },
+        { level: 'error', emit: 'event' }
     ],
     adapter
 });
@@ -47,5 +48,6 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
+prisma.$extends(softDeleteExtension);
 
 export default prisma;

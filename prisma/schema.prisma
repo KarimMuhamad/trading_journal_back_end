@@ -14,15 +14,15 @@ datasource db {
 }
 
 model User {
-  id          String   @id @default(uuid(7)) @db.Uuid
-  email       String   @unique @db.VarChar(100)
-  username    String   @unique @db.VarChar(100)
-  password    String   @db.VarChar(255)
-  is_verified Boolean  @default(false)
-  timezone    String   @db.VarChar(50) @default("UTC")
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  deleted_at  DateTime?
+  id                 String    @id @default(uuid(7)) @db.Uuid
+  email              String    @unique @db.VarChar(100)
+  username           String    @unique @db.VarChar(100)
+  password           String    @db.VarChar(255)
+  is_verified        Boolean   @default(false)
+  timezone           String    @default("UTC") @db.VarChar(50)
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+  deleted_at         DateTime?
   deleted_expires_at DateTime?
 
   auth_session       auth_session[]
@@ -31,8 +31,8 @@ model User {
   accounts           Accounts[]
   playbooks          Playbooks[]
 
-  @@map("users")
   @@index([deleted_at, deleted_expires_at])
+  @@map("users")
 }
 
 model auth_session {
@@ -77,22 +77,21 @@ model PasswordReset {
 }
 
 model Accounts {
-  id         String   @id @default(uuid(7)) @db.Uuid
-  user_id    String   @db.Uuid
-  nickname   String   @db.VarChar(255)
-  exchange   String   @db.VarChar(50)
-  balance    Decimal  @default(0)
+  id             String   @id @default(uuid(7)) @db.Uuid
+  user_id        String   @db.Uuid
+  nickname       String   @db.VarChar(255)
+  exchange       String   @db.VarChar(50)
+  balance        Decimal  @default(0)
   risk_per_trade Decimal  @default(1.00)
-  max_risk_daily   Decimal  @default(3.00)
-  is_archived Boolean  @default(false)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  trades     Trades[]
-
-  @@map("accounts")
+  max_risk_daily Decimal  @default(3.00)
+  is_archived    Boolean  @default(false)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  trades         Trades[]
 
   @@index([user_id, is_archived])
+  @@map("accounts")
 }
 
 model Playbooks {
@@ -106,9 +105,8 @@ model Playbooks {
   user           User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   tradePlaybooks TradePlaybooks[]
 
-  @@map("playbooks")
-
   @@index([user_id, deleted_at])
+  @@map("playbooks")
 }
 
 enum TradeStatus {
@@ -131,7 +129,7 @@ model Trades {
   id             String           @id @default(uuid(7)) @db.Uuid
   account_id     String           @db.Uuid
   pair           String           @db.VarChar(50)
-  position       PositionType     
+  position       PositionType
   entry_price    Decimal          @default(0)
   position_size  Decimal          @default(0)
   sl_price       Decimal          @default(0)
@@ -139,26 +137,26 @@ model Trades {
   entry_time     DateTime         @default(now())
   exit_time      DateTime?
   trade_duration Int              @default(0)
-  trade_result   TradeResult    
+  trade_result   TradeResult
   pnl            Decimal          @default(0)
   risk_reward    Decimal          @default(0)
   rr_actual      Decimal          @default(0)
   status         TradeStatus      @default(Running)
-  notes          String?          @db.Text           
+  notes          String?          @db.Text
   link_img       String?          @db.Text
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
   account        Accounts         @relation(fields: [account_id], references: [id], onDelete: Cascade)
   tradePlaybooks TradePlaybooks[]
 
-  @@map("trades")
   @@index([account_id, status])
+  @@map("trades")
 }
 
 model TradePlaybooks {
-  id          String       @id @default(uuid(7)) @db.Uuid
-  trade_id    String       @db.Uuid
-  playbook_id String       @db.Uuid
+  id          String    @id @default(uuid(7)) @db.Uuid
+  trade_id    String    @db.Uuid
+  playbook_id String    @db.Uuid
   trade       Trades    @relation(fields: [trade_id], references: [id], onDelete: Cascade)
   playbook    Playbooks @relation(fields: [playbook_id], references: [id], onDelete: Cascade)
 
