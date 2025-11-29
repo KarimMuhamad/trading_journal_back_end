@@ -19,11 +19,12 @@ export type AuthRequestLogin = {
 }
 
 export type AuthLoginSuccess = {
+    status: "SUCCESS";
     authRes: AuthResponse;
     accessToken: string;
-    session_id?: string;
-    token?: string;
-    refreshTokenExpiresIn?: number;
+    session_id: string;
+    token: string;
+    refreshTokenExpiresIn: number;
 };
 
 export type AuthLoginNeedRecover = {
@@ -34,6 +35,11 @@ export type AuthLoginNeedRecover = {
 };
 
 export type AuthLoginResponse = AuthLoginSuccess | AuthLoginNeedRecover;
+
+export type AuthRefreshAccessTokenResponse = {
+    authRes: AuthResponse;
+    accessToken: string;
+};
 
 export type AuthChangePasswordRequest = {
     newPassword: string;

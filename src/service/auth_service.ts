@@ -1,6 +1,7 @@
 import {
     AuthChangePasswordRequest, AuthForgotPasswordRequest,
     AuthLoginResponse,
+    AuthRefreshAccessTokenResponse,
     AuthRequestLogin,
     AuthRequestRegister,
     AuthResponse,
@@ -125,6 +126,7 @@ export class AuthService {
         });
 
         return {
+            status: "SUCCESS",
             authRes: toAuthResponse(user),
             accessToken: accessToken,
             session_id: session.id,
@@ -162,7 +164,7 @@ export class AuthService {
         }
     }
 
-    static async refreshAccessToken(sessionJSON: any): Promise<AuthLoginResponse> {
+    static async refreshAccessToken(sessionJSON: any): Promise<AuthRefreshAccessTokenResponse> {
         const { sid, rt } = parseCookieSession(sessionJSON);
         const session = await prisma.auth_session.findFirst({
             where: {
