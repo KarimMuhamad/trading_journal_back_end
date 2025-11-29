@@ -8,3 +8,4 @@ publicRouter.post('/auth/refresh', AuthController.refreshAccessToken);
 publicRouter.get('/auth/email/verify', AuthController.verifyEmail);
 publicRouter.post('/auth/forgot-password', AuthController.forgotPassword);
 publicRouter.patch('/forgot-password/reset', AuthController.resetPassword);
+publicRouter.post('/auth/recovery', AuthController.recoveryAccount);
