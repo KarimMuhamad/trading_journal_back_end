@@ -19,6 +19,7 @@ import { UAParser } from "ua-parser-js";
 import logger from "../application/logger";
 import { parseCookieSession } from "../utils/parseCookieSession";
 import email_service from "../email/services/email_service";
+import { th } from "zod/v4/locales";
 
 export class AuthService {
 
@@ -61,8 +62,9 @@ export class AuthService {
                 OR: [
                     { username: loginRequest.identifier },
                     { email: loginRequest.identifier }
-                ]
-            }
+                ],
+                includeDeleted: true
+            } as any
         });
 
         if (!user) {
@@ -71,6 +73,29 @@ export class AuthService {
 
         const isPasswordValid = await argon2.verify(user.password, loginRequest.password);
         if (!isPasswordValid) {
+            throw new ErrorResponse(401, "Invalid Email/Username or Password");
+        }
+
+        if (user.deleted_at && user.deleted_expires_at! >= new Date()) {
+            const token = crypto.randomBytes(32).toString('hex');
+            const tokenExpiredAt = new Date(Date.now() + 1000 * 60 * 5); // 5 minutes
+
+            await prisma.accountRecoveryToken.create({
+                data: {
+                    user_id: user.id,
+                    token: token,
+                    expires_at: tokenExpiredAt
+                }
+            });
+
+            return {
+                status: "RECOVERY_NEEDED",
+                message: "Account recovery needed. Your account has been scheduled for deletion.",
+                token: token,
+                recovery_period: user.deleted_expires_at!.getTime() - Date.now()
+            }
+
+        } else if (user.deleted_at && user.deleted_expires_at! < new Date()) {
             throw new ErrorResponse(401, "Invalid Email/Username or Password");
         }
 
