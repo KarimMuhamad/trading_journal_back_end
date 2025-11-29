@@ -381,4 +381,28 @@ export class AuthService {
             deviceInfo: `${uaResult.device.model} | ${uaResult.browser.name} | ${uaResult.os.name}`
         });
     }
+
+    static async recoveryAccount(token: string): Promise<void> {
+        const recoveryToken = await prisma.accountRecoveryToken.findFirst({
+            where: {
+                token: token,
+                used: false,
+                expires_at: { gt: new Date() }
+            }
+        });
+
+        if (!recoveryToken) throw new ErrorResponse(401, "Invalid or expired account recovery token");
+
+        await prisma.$transaction(async (tx) => {
+            const mark = await tx.accountRecoveryToken.update({
+                where: { token: recoveryToken.token },
+                data: { used: true }
+            });
+
+            await tx.user.update({
+                where: { id: recoveryToken.user_id },
+                data: { deleted_at: null, deleted_expires_at: null }
+            });
+        });
+    };
 }
