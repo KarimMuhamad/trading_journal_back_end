@@ -71,6 +71,27 @@ Base URL: `/api.domain/v1`
   "accessToken": "<accessToken>"
 }
 ```
+- `Set Cookie`
+```json
+{
+  "refreshToken": "<refreshToken>",
+  "httpOnly": true,
+  "secure": true,
+  "sameSite": "Strict",
+  "path": "/auth/refresh",
+  "Max-Age": 2592000 // 1 Month
+}
+```
+- Response 200
+```json
+{
+  "status": "RECOVERY_NEEDED",
+  "message": "Your account has been deleted and you can still recovered.",
+  "recoveryPeriod": 23,
+  "recoveryToken": "<token>"
+}
+```
+
 - Response 401
 ```json
 {
@@ -83,17 +104,6 @@ Base URL: `/api.domain/v1`
 {
   "status": "error",
   "message": "Validation error"
-}
-```
-- Cookie
-```json
-{
-  "refreshToken": "<refreshToken>",
-  "httpOnly": true,
-  "secure": true,
-  "sameSite": "Strict",
-  "path": "/auth/refresh",
-  "Max-Age": 2592000 // 1 Month
 }
 ```
 ---
@@ -193,25 +203,11 @@ Base URL: `/api.domain/v1`
 ### Verify Email
 - Method : `GET`
 - Endpoint : `/auth/email/verify`
-- Request Body
-```json
-{
-  "email": "karim@example.com",
-  "token": "<token>"
-}
-```
 - Response 200
 ```json
 {
   "status": "success",
   "message": "Email verified successfully."
-}
-```
-- Response 400
-```json
-{
-  "status": "error",
-  "message": "Invalid or expired token."
 }
 ```
 - Response 404
@@ -224,7 +220,7 @@ Base URL: `/api.domain/v1`
 ```json
 {
   "status": "error",
-  "message": "Invalid or expired access token."
+  "message": "Invalid or expired token."
 }
 ```
 ---
@@ -339,6 +335,7 @@ Base URL: `/api.domain/v1`
 ```
 ---
 
+
 ### Delete Account
 - Method : `DELETE`
 - Endpoint : `/auth/deleteAccount/:userId`
@@ -361,5 +358,23 @@ Base URL: `/api.domain/v1`
 {
   "status": "error",
   "message": "Invalid or expired access token."
+}
+```
+---
+
+### Recovery Account
+- Method : `POST`
+- Endpoint : `/auth/recovery?token=<token>`
+- Response 200
+```json
+{
+  "status": "success",
+  "message": "Account recovered successfully. Please Log In again",
+}
+```
+- Response 401
+```json
+{
+  "status": "Invalid or Expired Token"
 }
 ```

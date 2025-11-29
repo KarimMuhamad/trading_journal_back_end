@@ -1,15 +1,15 @@
 import 'dotenv/config';
-import {buildUrl} from "./routes";
+import { buildUrl } from "./routes";
 import supertest from "supertest";
-import {web} from "../src/application/web";
+import { web } from "../src/application/web";
 import logger from "../src/application/logger";
-import {AuthTestUtils} from "./test_utils";
+import { AuthTestUtils } from "./test_utils";
 import jwt from "jsonwebtoken";
 import prisma from "../src/application/database";
 
-describe('POST ' + buildUrl('') , () => {
+describe('POST ' + buildUrl(''), () => {
     afterAll(async () => {
-       await AuthTestUtils.deleteAll();
+        await AuthTestUtils.deleteAll();
     });
 
     it('should be able to register user', async () => {
@@ -44,13 +44,13 @@ describe('POST' + buildUrl('/auth/login'), () => {
     const ipAddress = '127.0.0.1';
 
 
-   beforeEach(async () => {
-      await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-   });
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
+    });
 
-   afterAll(async () => {
-       await AuthTestUtils.deleteAll();
-   });
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
 
     it('should be able to login user with username', async () => {
         const response = await supertest(web).post(buildUrl('/auth/login')).send({
@@ -167,7 +167,7 @@ describe('DELETE ' + buildUrl('/auth/logout'), () => {
     });
 
     it('should be reject logout if accessToken Expired', async () => {
-        const JWTExpiredAccessToken = jwt.sign({id: userId}, process.env.JWT_ACCESS_TOKEN_SECRET!, {expiresIn: '-1s'});
+        const JWTExpiredAccessToken = jwt.sign({ id: userId }, process.env.JWT_ACCESS_TOKEN_SECRET!, { expiresIn: '-1s' });
 
 
         const response = await supertest(web).delete(buildUrl('/auth/logout')).set('Authorization', 'Bearer ' + JWTExpiredAccessToken).set('Cookie', sessionJSON);
@@ -185,7 +185,7 @@ describe('POST ' + buildUrl('/auth/refresh'), () => {
     let userId: string;
     let sessionJSON: any;
 
-    beforeEach(async ()=> {
+    beforeEach(async () => {
         await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
         const session = await AuthTestUtils.createSession('test', 'test123456');
 
@@ -218,8 +218,8 @@ describe('POST ' + buildUrl('/auth/refresh'), () => {
 
     it('should be reject generate if session was expired', async () => {
         await prisma.auth_session.updateMany({
-            where: {user_id: userId},
-            data: {expires_at: new Date(Date.now() - 1000)}
+            where: { user_id: userId },
+            data: { expires_at: new Date(Date.now() - 1000) }
         });
 
         const response = await supertest(web).post(buildUrl('/auth/refresh')).set('Cookie', sessionJSON);
@@ -291,7 +291,7 @@ describe('GET ' + buildUrl('/auth/email/verify'), () => {
     it('should be verify token email', async () => {
         await supertest(web).post(buildUrl('/auth/email/send')).set('Authorization', 'Bearer ' + accessToken);
 
-        const tokenVerification = await prisma.emailVerification.findFirst({where: {user_id: userId}});
+        const tokenVerification = await prisma.emailVerification.findFirst({ where: { user_id: userId } });
 
         const response = await supertest(web).get(buildUrl('/auth/email/verify') + '?token=' + tokenVerification!.token);
 
@@ -302,11 +302,11 @@ describe('GET ' + buildUrl('/auth/email/verify'), () => {
     it('should be reject verify if token expired', async () => {
         await supertest(web).post(buildUrl('/auth/email/send')).set('Authorization', 'Bearer ' + accessToken);
 
-        const tokenVerification = await prisma.emailVerification.findFirst({where: {user_id: userId}});
+        const tokenVerification = await prisma.emailVerification.findFirst({ where: { user_id: userId } });
 
         await prisma.emailVerification.update({
-            where: {id: tokenVerification!.id},
-            data: {expires_at: new Date(Date.now() - 1000)}
+            where: { id: tokenVerification!.id },
+            data: { expires_at: new Date(Date.now() - 1000) }
         });
 
         const response = await supertest(web).get(buildUrl('/auth/email/verify') + '?token=' + tokenVerification!.token);
@@ -391,14 +391,14 @@ describe('POST ' + buildUrl('/auth/forgot-password'), () => {
     });
 
     it('should be able to send reset password link', async () => {
-        const response = await supertest(web).post(buildUrl('/auth/forgot-password')).send({email: emailTesting});
+        const response = await supertest(web).post(buildUrl('/auth/forgot-password')).send({ email: emailTesting });
 
         expect(response.status).toBe(200);
         expect(response.body.status).toBe('success');
     });
 
     it('should be not sending reset password link if email invalid', async () => {
-        const response = await supertest(web).post(buildUrl('/auth/forgot-password')).send({email: "salah@dev.com"});
+        const response = await supertest(web).post(buildUrl('/auth/forgot-password')).send({ email: "salah@dev.com" });
 
 
         expect(response.status).toBe(404);
@@ -471,5 +471,80 @@ describe('PATCH ' + buildUrl('/auth/reset-password'), () => {
 
         expect(res.status).toBe(401);
         expect(res.body.message).toMatch(/invalid/i);
+    });
+});
+
+describe('PRISMA EXTENSION - softDeleteExtension', () => {
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
+        await AuthTestUtils.createUser('test2', 'test2@dev.com', 'test123456');
+        await AuthTestUtils.createUser('test3', 'test3@dev.com', 'test123456');
+        await AuthTestUtils.createUser('test4', 'test4@dev.com', 'test123456');
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should filtering out soft deleted records on findMany', async () => {
+        await prisma.user.updateMany({
+            where: { username: 'test2' },
+            data: { deleted_at: new Date() }
+        });
+
+        const users = await prisma.user.findMany();
+
+        console.log(users);
+
+        expect(users.length).toBe(3);
+        users.forEach(user => {
+            expect(user.username).not.toBe('test2');
+        });
+    });
+
+    it('should filtering out soft deleted records on findFirst', async () => {
+        await prisma.user.updateMany({
+            where: { username: 'test3' },
+            data: { deleted_at: new Date() }
+        });
+
+        const user = await prisma.user.findFirst({
+            where: { username: 'test3' }
+        });
+
+        console.log(user);
+
+        expect(user).toBeNull();
+    });
+
+    it('should filtering out soft deleted records on findUnique', async () => {
+        await prisma.user.updateMany({
+            where: { username: 'test4' },
+            data: { deleted_at: new Date() }
+        });
+
+        const user = await prisma.user.findUnique({
+            where: { username: 'test4' }
+        });
+
+        console.log(user);
+
+        expect(user).toBeNull();
+    });
+
+    it('should be able to include soft deleted records on findUnique when includeDeleted is true', async () => {
+        await prisma.user.updateMany({
+            where: { username: 'test4' },
+            data: { deleted_at: new Date() }
+        });
+
+        const user = await prisma.user.findUnique({
+            where: { username: 'test4', includeDeleted: true } as any
+        });
+
+        console.log(user);
+
+        expect(user).not.toBeNull();
+        expect(user!.username).toBe('test4');
     });
 });

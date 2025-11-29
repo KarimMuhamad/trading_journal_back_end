@@ -1,36 +1,37 @@
 import logger from "./logger";
-import {PrismaPg} from "@prisma/adapter-pg";
-import {PrismaClient} from "../../prisma/generated/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../../prisma/generated/client";
+import { softDeleteExtension } from "../../prisma/extensions/softDelete";
 
 const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL as string,
 });
 
-export const prisma = new PrismaClient({
+const prismaBase = new PrismaClient({
     log: [
-        { level: 'query', emit: 'event'},
-        { level: 'info', emit: 'event'},
-        { level: 'warn', emit: 'event'},
-        { level: 'error', emit: 'event'}
+        { level: 'query', emit: 'event' },
+        { level: 'info', emit: 'event' },
+        { level: 'warn', emit: 'event' },
+        { level: 'error', emit: 'event' }
     ],
     adapter
 });
 
-prisma.$on('warn', (e) => {
+prismaBase.$on('warn', (e) => {
     logger.warn('Prisma Warning', {
         message: e.message,
         target: e.target,
     });
 });
 
-prisma.$on('error', (e) => {
+prismaBase.$on('error', (e) => {
     logger.error('Prisma Error', {
         message: e.message,
         target: e.target,
     })
 });
 
-prisma.$on('info', (e) => {
+prismaBase.$on('info', (e) => {
     logger.info('Prisma Info', {
         message: e.message
     })
@@ -38,7 +39,7 @@ prisma.$on('info', (e) => {
 
 
 if (process.env.NODE_ENV !== 'production') {
-    prisma.$on('query', (e) => {
+    prismaBase.$on('query', (e) => {
         logger.debug('Prisma Query', {
             query: e.query,
             params: e.params,
@@ -47,5 +48,5 @@ if (process.env.NODE_ENV !== 'production') {
     });
 }
 
-
+export const prisma = prismaBase.$extends(softDeleteExtension);
 export default prisma;

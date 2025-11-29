@@ -7,22 +7,22 @@ import {
     toAuthResponse
 } from "../model/auth_model";
 import 'dotenv/config';
-import {Validation} from "../validation/validation";
-import {AuthValidation} from "../validation/auth_validation";
+import { Validation } from "../validation/validation";
+import { AuthValidation } from "../validation/auth_validation";
 import prisma from "../application/database";
-import {ErrorResponse} from "../error/error_response";
+import { ErrorResponse } from "../error/error_response";
 import argon2 from "argon2";
 import jwt from "jsonwebtoken";
-import crypto from  'crypto';
-import {User} from "../../prisma/generated/client";
-import {UAParser} from "ua-parser-js";
+import crypto from 'crypto';
+import { User } from "../../prisma/generated/client";
+import { UAParser } from "ua-parser-js";
 import logger from "../application/logger";
-import {parseCookieSession} from "../utils/parseCookieSession";
+import { parseCookieSession } from "../utils/parseCookieSession";
 import email_service from "../email/services/email_service";
 
 export class AuthService {
 
-    static async register(req: AuthRequestRegister ) : Promise<AuthResponse> {
+    static async register(req: AuthRequestRegister): Promise<AuthResponse> {
         const registerRequest = Validation.validate(AuthValidation.REGISTER, req);
 
         const isUsernameExists = await prisma.user.findFirst({
@@ -53,14 +53,14 @@ export class AuthService {
         return toAuthResponse(user);
     }
 
-    static async login(req: AuthRequestLogin, userAgent : string, ipAddress: string) : Promise<AuthLoginResponse> {
+    static async login(req: AuthRequestLogin, userAgent: string, ipAddress: string): Promise<AuthLoginResponse> {
         const loginRequest = Validation.validate(AuthValidation.LOGIN, req);
 
         const user = await prisma.user.findFirst({
             where: {
                 OR: [
-                    {username: loginRequest.identifier},
-                    {email: loginRequest.identifier}
+                    { username: loginRequest.identifier },
+                    { email: loginRequest.identifier }
                 ]
             }
         });
@@ -76,10 +76,10 @@ export class AuthService {
 
         const refreshTokenExpiresIn = Date.now() + 1000 * 60 * 60 * 24 * 30; // 30 days
 
-        const payload = {id: user.id};
+        const payload = { id: user.id };
         const token = crypto.randomBytes(63).toString('hex');
 
-        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET!, {expiresIn: '25m'});
+        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET!, { expiresIn: '25m' });
         const refreshTokenHash = await argon2.hash(token);
 
         const parser = new UAParser(userAgent);
@@ -109,14 +109,14 @@ export class AuthService {
 
     }
 
-    static async logout(user: User, sessionJSON: any) : Promise<AuthResponse> {
-        const {sid, rt} = parseCookieSession(sessionJSON);
+    static async logout(user: User, sessionJSON: any): Promise<AuthResponse> {
+        const { sid, rt } = parseCookieSession(sessionJSON);
 
         const session = await prisma.auth_session.findFirst({
             where: {
                 id: sid,
                 user_id: user.id,
-                expires_at: {gt: new Date()}
+                expires_at: { gt: new Date() }
             }
         });
 
@@ -124,11 +124,11 @@ export class AuthService {
 
         if (await argon2.verify(session.token, rt)) {
             await prisma.auth_session.update({
-                where: {id: session.id},
-                data: {revoked_at: new Date()}
+                where: { id: session.id },
+                data: { revoked_at: new Date() }
             });
 
-            logger.info('Session revoked', {sessionJSON});
+            logger.info('Session revoked', { sessionJSON });
 
             return toAuthResponse(user);
 
@@ -137,13 +137,13 @@ export class AuthService {
         }
     }
 
-    static async refreshAccessToken(sessionJSON: any) : Promise<AuthLoginResponse> {
-        const {sid, rt} = parseCookieSession(sessionJSON);
+    static async refreshAccessToken(sessionJSON: any): Promise<AuthLoginResponse> {
+        const { sid, rt } = parseCookieSession(sessionJSON);
         const session = await prisma.auth_session.findFirst({
             where: {
                 id: sid,
                 revoked_at: null,
-                expires_at: {gt: new Date()}
+                expires_at: { gt: new Date() }
             }
         });
 
@@ -152,23 +152,23 @@ export class AuthService {
         const isValidSession = await argon2.verify(session.token, rt);
         if (!isValidSession) {
             await prisma.auth_session.update({
-                where: {id: session.id},
-                data: {revoked_at: new Date()}
+                where: { id: session.id },
+                data: { revoked_at: new Date() }
             });
 
-            logger.warn('Miss Match Session and Revoked it', {sessionJSON});
+            logger.warn('Miss Match Session and Revoked it', { sessionJSON });
 
             throw new ErrorResponse(401, "Unauthorized, invalid session");
         }
 
         const user = await prisma.user.findUnique({
-            where: {id: session.user_id}
+            where: { id: session.user_id }
         });
 
         if (!user) throw new ErrorResponse(401, "Unauthorized, invalid session User no longer exists");
 
-        const payload = {id: user.id};
-        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET!, {expiresIn: '25m'});
+        const payload = { id: user.id };
+        const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET!, { expiresIn: '25m' });
 
         return {
             authRes: toAuthResponse(user),
@@ -176,7 +176,7 @@ export class AuthService {
         }
     }
 
-    static async sendEmailVerification(user: User) : Promise<void> {
+    static async sendEmailVerification(user: User): Promise<void> {
         const isUserVerified = await prisma.user.findUnique({
             where: {
                 id: user.id,
@@ -206,34 +206,34 @@ export class AuthService {
         });
     }
 
-    static async verifyEmail(token: string) : Promise<void> {
+    static async verifyEmail(token: string): Promise<void> {
         const verification = await prisma.emailVerification.findFirst({
             where: {
                 token: token,
                 used: false,
-                expires_at: {gt: new Date()}
+                expires_at: { gt: new Date() }
             }
         });
 
         if (!verification) throw new ErrorResponse(401, "Invalid or expired verification link");
 
         await prisma.$transaction(async (tx) => {
-           const updated = await tx.emailVerification.updateMany({
-               where: {id: verification.id, used: false},
-               data: {used: true}
-           });
+            const updated = await tx.emailVerification.updateMany({
+                where: { id: verification.id, used: false },
+                data: { used: true }
+            });
 
-           if (updated.count === 0) throw new ErrorResponse(401, "Verification link already used");
+            if (updated.count === 0) throw new ErrorResponse(401, "Verification link already used");
 
-           await tx.user.update({
-               where: {id: verification.user_id},
-               data: {is_verified: true}
-           });
+            await tx.user.update({
+                where: { id: verification.user_id },
+                data: { is_verified: true }
+            });
         });
     }
 
-    static async changePassword(user:User, req: AuthChangePasswordRequest, sessionJSON: any, userAgent: string) : Promise<void> {
-        const {sid} = parseCookieSession(sessionJSON);
+    static async changePassword(user: User, req: AuthChangePasswordRequest, sessionJSON: any, userAgent: string): Promise<void> {
+        const { sid } = parseCookieSession(sessionJSON);
         const changePasswordRequest = Validation.validate(AuthValidation.CHANGEPASSWORD, req);
 
         const isCurrentPasswordValid = await argon2.verify(user.password, changePasswordRequest.currentPassword);
@@ -242,19 +242,19 @@ export class AuthService {
         const hashedNewPassword = await argon2.hash(changePasswordRequest.newPassword);
 
         await prisma.$transaction(async (tx) => {
-           await tx.user.update({
-               where: {id: user.id},
-               data: {password: hashedNewPassword}
-           });
+            await tx.user.update({
+                where: { id: user.id },
+                data: { password: hashedNewPassword }
+            });
 
-           const result = await tx.auth_session.updateMany({
-               where: {
-                   user_id: user.id,
-                   id: {not: sid},
-                   revoked_at: null
-               },
-               data: {revoked_at: new Date()}
-           });
+            const result = await tx.auth_session.updateMany({
+                where: {
+                    user_id: user.id,
+                    id: { not: sid },
+                    revoked_at: null
+                },
+                data: { revoked_at: new Date() }
+            });
 
             logger.warn('User password changed from setting pages, All Session Revoked :', {
                 userID: user.id,
@@ -274,11 +274,11 @@ export class AuthService {
         })
     }
 
-    static async forgotPassword(req: AuthForgotPasswordRequest) : Promise<void> {
+    static async forgotPassword(req: AuthForgotPasswordRequest): Promise<void> {
         const forgotPasswordRequest = Validation.validate(AuthValidation.FORGOTPASSWORD, req);
 
         const user = await prisma.user.findUnique({
-            where: {email: forgotPasswordRequest.email}
+            where: { email: forgotPasswordRequest.email }
         });
 
         if (!user) throw new ErrorResponse(404, "User not found");
@@ -303,21 +303,21 @@ export class AuthService {
         })
     }
 
-    static async resetPassword(req: AuthForgotPasswordRequest, userAgent: string) : Promise<void> {
+    static async resetPassword(req: AuthForgotPasswordRequest, userAgent: string): Promise<void> {
         const token = req.token;
 
         const passwordReset = await prisma.passwordReset.findFirst({
             where: {
                 token: token,
                 used: false,
-                expires_at: {gt: new Date()}
+                expires_at: { gt: new Date() }
             }
         });
 
         if (!passwordReset) throw new ErrorResponse(401, "Invalid or expired password reset link");
 
         const user = await prisma.user.findUnique({
-            where: {id: passwordReset.user_id}
+            where: { id: passwordReset.user_id }
         });
         if (!user) throw new ErrorResponse(404, "User no longer exists");
 
@@ -329,22 +329,22 @@ export class AuthService {
 
         await prisma.$transaction(async (tx) => {
             const mark = await tx.passwordReset.updateMany({
-                where: {id: passwordReset.id, used: false},
-                data: {used: true}
+                where: { id: passwordReset.id, used: false },
+                data: { used: true }
             });
             if (mark.count === 0) throw new ErrorResponse(401, "Password reset link already used");
 
             await tx.user.update({
-                where: {id: passwordReset.user_id},
-                data: {password: newPassword}
+                where: { id: passwordReset.user_id },
+                data: { password: newPassword }
             });
 
             await tx.auth_session.updateMany({
-                where: {user_id: passwordReset.user_id},
-                data: {revoked_at: new Date()}
+                where: { user_id: passwordReset.user_id },
+                data: { revoked_at: new Date() }
             });
 
-            logger.warn('User password changed from reset password link, All Session Revoked :', {userId: passwordReset.user_id});
+            logger.warn('User password changed from reset password link, All Session Revoked :', { userId: passwordReset.user_id });
         });
 
         await email_service.sendPasswordChangedNotification({
