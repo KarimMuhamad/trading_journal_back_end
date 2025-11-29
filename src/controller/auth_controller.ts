@@ -207,6 +207,9 @@ export class AuthController {
                 status: "success",
                 message: "Password reset link sent successfully"
             });
+
+            logger.info("Password reset link requested for email : ", { email: email.email.replace(/(?<=.).(?=[^@]*@)/g, '*') });
+
         } catch (e: any) {
             logger.warn("Request reset password link failed : ", {
                 message: e.message,
@@ -230,8 +233,30 @@ export class AuthController {
                 message: "Password reset successfully"
             });
 
+            logger.info("Password reset successfully with token : ", { token: request.token });
+
         } catch (e: any) {
             logger.warn("Reset password failed : ", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
+
+    static async recoveryAccount(req: Request, res: Response, next: NextFunction) {
+        try {
+            const token = req.query.token as string;
+            await AuthService.recoveryAccount(token);
+            res.status(200).json({
+                status: "success",
+                message: "Account recovery successfully"
+            });
+
+            logger.info("Account recovered successfully with token : ", { token: token });
+
+        } catch (e: any) {
+            logger.warn("Account recovery failed : ", {
                 message: e.message,
                 status: e.status,
             });
