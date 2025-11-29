@@ -335,33 +335,6 @@ Base URL: `/api.domain/v1`
 ```
 ---
 
-
-### Delete Account
-- Method : `DELETE`
-- Endpoint : `/auth/deleteAccount/:userId`
-- Authorization : `Bearer <accessToken>`
-- Request body
-```json
-{
-  "password": "StrongPass!23"
-}
-```
-- Response 200
-```json
-{
-  "status": "success",
-  "message": "Account deleted successfully."
-}
-```
-- Response 401
-```json
-{
-  "status": "error",
-  "message": "Invalid or expired access token."
-}
-```
----
-
 ### Recovery Account
 - Method : `POST`
 - Endpoint : `/auth/recovery?token=<token>`
