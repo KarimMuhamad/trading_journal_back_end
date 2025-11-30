@@ -11,3 +11,5 @@ apiRouter.use(authMiddleware);
 apiRouter.delete('/auth/logout', AuthController.logout);
 apiRouter.post('/auth/email/send', AuthController.sendEmailVerification);
 apiRouter.patch('/auth/change-password', AuthController.changePassword);
+
+// User Endpoints
