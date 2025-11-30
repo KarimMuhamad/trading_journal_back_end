@@ -32,7 +32,7 @@ Base URL: `/api.domain/v1`
 ```
 ---
 
-### Update User Profile
+### Update UserName Profile
 - Method : `PATCH`
 - Endpoint : `/users/me`
 - Authorization : `Bearer <accessToken>`
@@ -40,7 +40,6 @@ Base URL: `/api.domain/v1`
 ```json
 {
   "username": "karimfx",
-  "email": "karim@example.com"
 }
 ```
 - Response 200
@@ -51,8 +50,14 @@ Base URL: `/api.domain/v1`
   "data" : {
     "id" : 123,
     "username " : "karimfx12",
-    "email" : "karim@example.com"
   }
+}
+```
+- Response 400
+```json
+{
+  "status": "error",
+  "message": "Invalid username format."
 }
 ```
 - Response 401
@@ -62,6 +67,102 @@ Base URL: `/api.domain/v1`
   "message": "Unauthorized. Please log in."
 }
 ```
+---
+
+### Request OTP Update Email
+- Method : `POST`
+- Endpoint : `users/email/request-otp`
+- Authorization : `Bearer <accessToken>`
+- Request Body 
+```json
+{
+  "newEmail" : "tjNew@dev.com"
+}
+```
+- Response 200
+```json
+{
+  "status" : "success",
+  "message" : "Sending OTP Code succesfully"
+}
+```
+- Response 400
+```json
+{
+  "status": "error",
+  "message": "Invalid email format."
+}
+```
+- Response 409
+```json
+{
+  "status" : "error",
+  "message" : "Email already exist"
+}
+```
+- Response 429
+```json
+{
+  "status" : "error",
+  "message" : "to manu request. please try again later"
+}
+```
+- Response 401
+```json
+{
+  "status": "error",
+  "message": "Unauthorized. Please log in."
+}
+```
+---
+
+### Verify OTP and Update Email
+- Method : `PATCH`
+- Endpoint : `users/email/verify-otp`
+- Authorization : `Bearer <accessToken>`
+- Request Body 
+```json
+{
+  "newEmail" : "tjNew@dev.com",
+  "otp" : "32418" //6 digit
+}
+```
+- Response 200 
+```json
+{
+  "status" : "success",
+  "message" : "Email updated succesfully"
+}
+```
+- Response 400
+```json
+{
+  "status": "error",
+  "message": "Invalid OTP or email format."
+}
+```
+- Response 404
+``json
+{
+  "status": "error",
+  "message": "OTP not found or expired."
+}
+```
+- Response 409
+```json
+{
+  "status" : "error",
+  "message" : "Email already exist"
+}
+```
+- Response 401
+```json
+{
+  "status": "error",
+  "message": "Unauthorized. Please log in."
+}
+```
+---
 
 ### Delete User Account
 - Method : `DELETE`
