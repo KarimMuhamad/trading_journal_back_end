@@ -53,6 +53,13 @@ Base URL: `/api.domain/v1`
   }
 }
 ```
+- Response 400
+```json
+{
+  "status": "error",
+  "message": "Invalid username format."
+}
+```
 - Response 401
 ```json
 {
@@ -77,6 +84,13 @@ Base URL: `/api.domain/v1`
 {
   "status" : "success",
   "message" : "Sending OTP Code succesfully"
+}
+```
+- Response 400
+```json
+{
+  "status": "error",
+  "message": "Invalid email format."
 }
 ```
 - Response 409
@@ -110,7 +124,7 @@ Base URL: `/api.domain/v1`
 ```json
 {
   "newEmail" : "tjNew@dev.com",
-  "otp" : 32418 //6 digit
+  "otp" : "32418" //6 digit
 }
 ```
 - Response 200 
@@ -118,6 +132,20 @@ Base URL: `/api.domain/v1`
 {
   "status" : "success",
   "message" : "Email updated succesfully"
+}
+```
+- Response 400
+```json
+{
+  "status": "error",
+  "message": "Invalid OTP or email format."
+}
+```
+- Response 404
+``json
+{
+  "status": "error",
+  "message": "OTP not found or expired."
 }
 ```
 - Response 409
