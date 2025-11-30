@@ -102,6 +102,40 @@ Base URL: `/api.domain/v1`
 ```
 ---
 
+### Verify OTP and Update Email
+- Method : `PATCH`
+- Endpoint : `users/email/verify-otp`
+- Authorization : `Bearer <accessToken>`
+- Request Body 
+```json
+{
+  "newEmail" : "tjNew@dev.com",
+  "otp" : 32418 //6 digit
+}
+```
+- Response 200 
+```json
+{
+  "status" : "success",
+  "message" : "Email updated succesfully"
+}
+```
+- Response 409
+```json
+{
+  "status" : "error",
+  "message" : "Email already exist"
+}
+```
+- Response 401
+```json
+{
+  "status": "error",
+  "message": "Unauthorized. Please log in."
+}
+```
+---
+
 ### Delete User Account
 - Method : `DELETE`
 - Endpoint : `/users/me`
