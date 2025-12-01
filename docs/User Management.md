@@ -177,6 +177,7 @@ Base URL: `/api.domain/v1`
 - Response 200
 ```json
 {
+  "status": "success",
   "message": "User account deleted successfully."
 }
 ```

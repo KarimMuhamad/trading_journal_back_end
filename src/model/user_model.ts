@@ -1,1 +1,3 @@
-// TODO Implement user model
+export type DeleteAccountRequest = {
+    password: string;
+};
