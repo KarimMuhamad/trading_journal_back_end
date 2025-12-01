@@ -50,6 +50,7 @@ Base URL: `/api.domain/v1`
   "data" : {
     "id" : 123,
     "username " : "karimfx12",
+    "email" : "karim@dev.com"
   }
 }
 ```
@@ -58,6 +59,20 @@ Base URL: `/api.domain/v1`
 {
   "status": "error",
   "message": "Invalid username format."
+}
+```
+- Response 403
+```json
+{
+  "status": "error",
+  "message": "Username cannot be the same."
+}
+```
+- Response 409
+```json
+{
+  "status": "error",
+  "message": "Username already exist."
 }
 ```
 - Response 401
