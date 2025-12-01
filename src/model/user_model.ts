@@ -6,6 +6,10 @@ export type UserResponse = {
   email: string;
 };
 
+export type UserUpdateUsernameRequest = {
+    username: string;
+}
+
 export function toUserResponse (user: User): UserResponse {
     return {
         id: user.id,
