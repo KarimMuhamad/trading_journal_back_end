@@ -91,7 +91,9 @@ export class UserService {
             });
         });
 
-        return toUserResponse(user);
+        const userUpdated = await prisma.user.findUnique({where: {id: verification.user_id}});
+
+        return toUserResponse(userUpdated!);
     }
 
     static async deleteAccount(user: User, req: DeleteAccountRequest) : Promise<void> {
