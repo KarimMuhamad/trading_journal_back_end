@@ -4,11 +4,11 @@ import path from "path";
 import fs from "fs/promises";
 import 'dotenv/config';
 import logger from "../../application/logger";
-import { 
-  EmailOptions, 
-  ResetPasswordData, 
-  EmailVerificationData,
-  PasswordChangedData 
+import {
+    EmailOptions,
+    ResetPasswordData,
+    EmailVerificationData,
+    PasswordChangedData, DeleteAccountData
 } from '../types/email_types';
 
 
@@ -105,6 +105,21 @@ class EmailServices {
                 userName: data.username,
                 changeTime: data.changedAt,
                 deviceInfo: data.deviceInfo || "Unknown device",
+                year: new Date().getFullYear(),
+            },
+        });
+    }
+
+    async deleteAccountNotification(data : DeleteAccountData): Promise<boolean> {
+        const loginUrl = `${process.env.FRONTEND_URL}/auth/login`;
+        return this.sendEmail({
+            to: data.email,
+            subject: "You Requested Account Deletion",
+            template: "delete_account",
+            context: {
+                userName: data.username,
+                deletionData: data.deleteDate,
+                loginUrl,
                 year: new Date().getFullYear(),
             },
         });

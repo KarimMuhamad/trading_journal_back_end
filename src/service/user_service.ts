@@ -5,6 +5,7 @@ import {ErrorResponse} from "../error/error_response";
 import {Validation} from "../validation/validation";
 import {UserValidation} from "../validation/user_validation";
 import argon2 from "argon2";
+import email_service from "../email/services/email_service";
 
 export class UserService {
     static async getUserProfile(user: User) : Promise<UserResponse> {
@@ -32,6 +33,8 @@ export class UserService {
         const isPasswordValid = await argon2.verify(user.password, req.password);
         if(!isPasswordValid) throw new ErrorResponse(403, "Invalid password");
 
+        const deleteDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 day
+
         await prisma.$transaction(async (tx) => {
             await tx.auth_session.updateMany({
                 where: {user_id: user.id},
@@ -40,10 +43,14 @@ export class UserService {
 
             await tx.user.update({
                 where: {id: user.id},
-                data: {deleted_at: new Date(), deleted_expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)}
+                data: {deleted_at: new Date(), deleted_expires_at: deleteDate}
             });
         });
 
-        // TODO send email to user to notify account deletion
+        await email_service.deleteAccountNotification({
+            email: user.email,
+            username: user.username,
+            deleteDate: deleteDate.toLocaleString(),
+        })
     }
 }
