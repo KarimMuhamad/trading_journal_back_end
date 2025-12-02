@@ -5,6 +5,7 @@ import supertest from "supertest";
 import {web} from "../src/application/web";
 import logger from "../src/application/logger";
 import prisma from "../src/application/database";
+import {generateRandomOTP} from "../src/utils/generateRandomOTP";
 
 
 
@@ -157,4 +158,75 @@ describe('DELETE ' + buildUrl('/users/me'), () => {
         expect(response.body.status).toBe('error');
         expect(response.error).toBeDefined();
     });
-})
+});
+
+describe('POST' + buildUrl('/users/me/request-otp'), () => {
+    let accessToken: string;
+    const emailTesting = process.env.EMAIL_TESTING as string;
+
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', 'firstemail@dev.com', 'test123456');
+        const session = await AuthTestUtils.createSession('test', 'test123456');
+        accessToken = session.accessToken;
+    });
+
+    afterEach(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be able to request otp', async () => {
+        const response = await supertest(web).post(buildUrl('/users/email/request-otp')).set('Authorization', 'Bearer' +
+            ' ' + accessToken).send({
+            email: emailTesting
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be reject email same', async () => {
+        const response = await supertest(web).post(buildUrl('/users/email/request-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
+            email: 'firstemail@dev.com'
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(403);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject validation eror', async () => {
+        const response = await supertest(web).post(buildUrl('/users/email/request-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
+            email: 'firstemaildev.mail'
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject if email exist', async () => {
+        await AuthTestUtils.createUser('test2', 'email2@dev.com', 'test123456');
+        const response = await supertest(web).post(buildUrl('/users/email/request-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
+            email: 'email2@dev.com'
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(409);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject if token invalid', async () => {
+        const response = await supertest(web).post(buildUrl('/users/email/request-otp')).set('Authorization', 'Bearer' + ' ' + 'invalidAccessToken').send({
+            email: emailTesting
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+});

@@ -43,3 +43,10 @@ export interface DeleteAccountData {
     username: string;
     deleteDate: string;
 }
+
+export interface EmailChangeData {
+    email: string;
+    username: string;
+    otp: string;
+    expiryTime: string;
+}

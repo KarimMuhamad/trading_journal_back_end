@@ -1,11 +1,19 @@
 import {User} from "../../prisma/generated/client";
 import prisma from "../application/database";
-import {DeleteAccountRequest, toUserResponse, UserResponse, UserUpdateUsernameRequest} from "../model/user_model";
+import {
+    DeleteAccountRequest,
+    toUserResponse,
+    UserResponse,
+    UserUpdateEmailRequest,
+    UserUpdateUsernameRequest
+} from "../model/user_model";
 import {ErrorResponse} from "../error/error_response";
 import {Validation} from "../validation/validation";
 import {UserValidation} from "../validation/user_validation";
 import argon2 from "argon2";
 import email_service from "../email/services/email_service";
+import {AuthValidation} from "../validation/auth_validation";
+import {generateRandomOTP} from "../utils/generateRandomOTP";
 
 export class UserService {
     static async getUserProfile(user: User) : Promise<UserResponse> {
@@ -27,6 +35,32 @@ export class UserService {
 
         const updateUser = await prisma.user.update({where: {id: user.id}, data: {username: validateReq.username}});
         return toUserResponse(updateUser!);
+    }
+
+    static async sendOtpUpdateEmail(user: User, req: UserUpdateEmailRequest) : Promise<void> {
+        const validateReq = Validation.validate(UserValidation.UPDATEUSEREMAIL, req);
+        if (user.email === validateReq.email) throw new ErrorResponse(403, "Email cannot be the same");
+
+        const isEmailExist = await prisma.user.findUnique({where: {email: validateReq.email}});
+        if (isEmailExist) throw new ErrorResponse(409, "Email already exist");
+
+        const OTP = generateRandomOTP();
+        const expiryTime = new Date(Date.now() + 1000 * 60 * 6);
+
+        await prisma.emailChangeVerification.create({
+            data: {
+                user_id: user.id,
+                otp: OTP,
+                expires_at: expiryTime
+            }
+        });
+
+        await email_service.sendOtpUpdateEmail({
+            email: validateReq.email,
+            username: user.username,
+            otp: OTP,
+            expiryTime: expiryTime.toLocaleString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        });
     }
 
     static async deleteAccount(user: User, req: DeleteAccountRequest) : Promise<void> {
