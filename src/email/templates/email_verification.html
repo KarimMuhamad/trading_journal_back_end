@@ -36,25 +36,16 @@
     }
     .email-header {
       background: linear-gradient(135deg, #18181b 0%, #0a0a0a 100%);
-      padding: 48px 40px;
-      text-align: center;
+      padding: 22px 30px;
       border-bottom: 1px solid #27272a;
       position: relative;
-    }
-    .email-header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, #C8FF3D, transparent);
+      display: flex;
+      justify-content: center;
     }
     .brand-container {
-      margin-bottom: -12px;
       background-color: #C8FF3D;
       max-width: fit-content;
-      margin: auto;
+      margin: auto 0px;
       padding: 2px 16px;
       border-radius: 12px;
     }
@@ -62,19 +53,19 @@
       max-width: 180px;
       height: auto;
       color: #0a0a0a;
-      font-style: bold;
-      font-weight: 900;
+      font-weight: bold;
     }
     .header-icon {
       font-size: 36px;
-      font-weight: 500;
-      margin-bottom: 10px;
+      font-weight: bold;
+      margin-left: 12px;
+      letter-spacing: -1.2px;
+      color: #FFF;
     }
     .header-title {
-      font-size: 36px;
+      font-size: 32px;
       font-weight: 700;
       color: #ffffff;
-      margin: 0 0 12px 0;
       letter-spacing: -1px;
     }
     .header-subtitle {
@@ -89,22 +80,22 @@
     .greeting {
       font-size: 20px;
       font-weight: 600;
-      color: #ffffff;
-      margin-bottom: 24px;
+      color: #fff;
+      margin-bottom: 12px;
     }
     .email-body p {
-      margin: 0 0 16px 0;
-      font-size: 16px;
+      margin: 0 0 11px 0;
+      font-size: 14px;
       color: #a1a1aa;
       line-height: 1.7;
     }
     .cta-button {
       display: inline-block;
-      padding: 16px 40px;
+      padding: 11px 22px;
       background: #C8FF3D;
       color: #0a0a0a;
       text-decoration: none;
-      border-radius: 12px;
+      border-radius: 13px;
       font-weight: 700;
       font-size: 16px;
       margin: 22px 0;
@@ -114,29 +105,26 @@
     .steps-box {
       background: linear-gradient(135deg, #1e3a1e 0%, #0f1f0f 100%);
       border: 1px solid #2d5f2d;
-      padding: 24px;
+      padding: 16px 24px;
       border-radius: 12px;
-      margin: 18px 0;
+      margin: 8px 0;
     }
     .steps-box-title {
       font-size: 16px;
       font-weight: 700;
       color: #C8FF3D;
-      margin: 0 0 16px 0;
+      margin: 0 0 8px 0;
     }
     .step-item {
       display: flex;
       align-items: flex-start;
-      margin-bottom: 6px;
+      margin-bottom: 2px;
     }
     .step-item:last-child {
       margin-bottom: 0;
     }
     .step-number {
-      min-width: 32px;
-      height: 32px;
-      background: #C8FF3D;
-      color: #0a0a0a;
+      color: #C8FF3D;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -147,7 +135,6 @@
     }
     .step-content {
       flex: 1;
-      padding-top: 2px;
     }
     .step-title {
       font-size: 15px;
@@ -163,15 +150,15 @@
     .warning-box {
         background: linear-gradient(135deg, #3f1d1d 0%, #2a1515 100%);
         border: 1px solid #7f1d1d;
-        padding: 24px;
+        padding: 16px 24px;
         border-radius: 12px;
-        margin: 12px 0;
+        margin: 8px 0;
     }
     .warning-box-title {
         font-size: 16px;
         font-weight: 700;
         color: #fca5a5;
-        margin: 0 0 12px 0;
+        margin: 0 0 8px 0;
         display: flex;
         align-items: center;
     }
@@ -197,9 +184,9 @@
     .info-box {
       background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
       border: 1px solid #334155;
-      padding: 20px;
-      border-radius: 12px;
-      margin: 12px 0;
+        padding: 16px 24px;
+        border-radius: 12px;
+        margin: 8px 0;
     }
     .info-box p {
       margin: 4px 0;
@@ -211,20 +198,20 @@
       border: 1px solid #27272a;
       padding: 16px;
       border-radius: 8px;
-      margin: 24px 0;
+      margin: 12px 0;
       word-break: break-all;
       font-family: 'Courier New', monospace;
-      font-size: 13px;
+      font-size: 12px;
       color: #C8FF3D;
     }
     .divider {
       height: 1px;
       background: linear-gradient(90deg, transparent, #27272a, transparent);
-      margin: 40px 0;
+      margin: 18px 0;
     }
     .email-footer {
       background: #0a0a0a;
-      padding: 40px;
+      padding: 32px;
       text-align: center;
       border-top: 1px solid #27272a;
     }
@@ -232,10 +219,10 @@
       font-size: 18px;
       font-weight: 700;
       color: #C8FF3D;
-      margin-bottom: 16px;
+      margin-bottom: 13px;
     }
     .email-footer p {
-      margin: 8px 0;
+      margin: 2px 0;
       font-size: 13px;
       color: #52525b;
     }
@@ -251,13 +238,14 @@
         </div>
         
         <div class="header-icon">Trading Journal</div>
-        <h1 class="header-title">Verify Your Email</h1>
-        <p class="header-subtitle">One last step to get started</p>
       </div>
 
       <!-- Body -->
       <div class="email-body">
-        <p class="greeting">Hey {{userName}},</p>
+        <h1 class="header-title">Verify Your Email</h1>
+        <p class="header-subtitle">One last step to get started</p>
+
+        <h3 class="greeting">Hey {{userName}},</h3>
         
         <p>Thanks for signing up! We're excited to have you on board. Just one more step to activate your account.</p>
         
