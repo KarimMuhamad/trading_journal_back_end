@@ -9,6 +9,7 @@ export enum EmailTemplate {
     RESET_PASSWORD = "reset_password",
     EMAIL_VERIFICATION = "email_verification",
     PASSWORD_CHANGED = "password_changed",
+    DELETE_ACCOUNT = "delete_account"
 }
 
 export interface EmailUser {
@@ -35,4 +36,10 @@ export interface PasswordChangedData {
     username: string;
     changedAt: string;
     deviceInfo: string;
+}
+
+export interface DeleteAccountData {
+    email: string;
+    username: string;
+    deleteDate: string;
 }
