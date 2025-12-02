@@ -15,3 +15,4 @@ apiRouter.patch('/auth/change-password', AuthController.changePassword);
 
 // User Endpoints
 apiRouter.get('/users/me', UserController.getUserProfile);
+apiRouter.patch('/users/me', UserController.updateUsername);
