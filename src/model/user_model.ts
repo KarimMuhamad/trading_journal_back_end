@@ -7,7 +7,8 @@ export type UserResponse = {
 };
 
 export type UserUpdateEmailRequest = {
-    email: string;
+    email?: string;
+    otp?: string;
 }
 
 export type UserUpdateUsernameRequest = {
