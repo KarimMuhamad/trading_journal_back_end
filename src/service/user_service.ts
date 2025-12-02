@@ -38,27 +38,28 @@ export class UserService {
     }
 
     static async sendOtpUpdateEmail(user: User, req: UserUpdateEmailRequest) : Promise<void> {
-        const validateReq = Validation.validate(UserValidation.UPDATEUSERNAME, req);
+        const validateReq = Validation.validate(UserValidation.UPDATEUSEREMAIL, req);
         if (user.email === validateReq.email) throw new ErrorResponse(403, "Email cannot be the same");
 
         const isEmailExist = await prisma.user.findUnique({where: {email: validateReq.email}});
         if (isEmailExist) throw new ErrorResponse(409, "Email already exist");
 
         const OTP = generateRandomOTP();
+        const expiryTime = new Date(Date.now() + 1000 * 60 * 6);
 
         await prisma.emailChangeVerification.create({
             data: {
                 user_id: user.id,
                 otp: OTP,
-                expires_at: new Date(Date.now() + 1000 * 60 * 6) // 6 minutes
+                expires_at: expiryTime
             }
         });
 
-        await email_service.sendEmailVerificationEmail({
-            email: user.email,
+        await email_service.sendOtpUpdateEmail({
+            email: validateReq.email,
             username: user.username,
-            verificationToken: OTP,
-            expiryTime: new Date(Date.now() + 1000 * 60 * 6).toLocaleString(),
+            otp: OTP,
+            expiryTime: expiryTime.toLocaleString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
         });
     }
 

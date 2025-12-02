@@ -8,7 +8,7 @@ import {
     EmailOptions,
     ResetPasswordData,
     EmailVerificationData,
-    PasswordChangedData, DeleteAccountData
+    PasswordChangedData, DeleteAccountData, EmailChangeData
 } from '../types/email_types';
 
 
@@ -108,6 +108,20 @@ class EmailServices {
                 year: new Date().getFullYear(),
             },
         });
+    }
+
+    async sendOtpUpdateEmail(data : EmailChangeData): Promise<boolean> {
+        return this.sendEmail({
+            to: data.email,
+            subject: "Verify Your New Email",
+            template: "email_change_otp",
+            context: {
+                userName: data.username,
+                otpCode: data.otp,
+                expiryTime: data.expiryTime,
+                year: new Date().getFullYear(),
+            }
+        })
     }
 
     async deleteAccountNotification(data : DeleteAccountData): Promise<boolean> {
