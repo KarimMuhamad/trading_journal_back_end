@@ -17,3 +17,4 @@ apiRouter.patch('/auth/change-password', AuthController.changePassword);
 apiRouter.get('/users/me', UserController.getUserProfile);
 apiRouter.patch('/users/me', UserController.updateUsername);
 apiRouter.delete('/users/me', UserController.deleteAccount);
+apiRouter.post('/users/email/request-otp', UserController.sendOTPEmail);
