@@ -16,12 +16,12 @@ export class UserService {
     static async updateUserName(user: User, req: UserUpdateUsernameRequest) : Promise<UserResponse> {
         const validateReq = Validation.validate(UserValidation.UPDATEUSERNAME, req);
 
+        if (user.username === validateReq.username) throw new ErrorResponse(403, "Username cannot be the same");
+
         if (validateReq.username) {
             const isUsernameExist = await prisma.user.findUnique({where: {username: validateReq.username}});
             if (isUsernameExist) throw new ErrorResponse(409, "Username already exist");
         }
-
-        if (user.username === validateReq.username) throw new ErrorResponse(403, "Username cannot be the same");
 
         const updateUser = await prisma.user.update({where: {id: user.id}, data: {username: validateReq.username}});
         return toUserResponse(updateUser!);
