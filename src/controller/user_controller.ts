@@ -2,7 +2,12 @@ import logger from "../application/logger";
 import { UserService } from "../service/user_service";
 import { AuthUserRequest } from "../types/auth_type";
 import { NextFunction, Response } from "express";
-import {DeleteAccountRequest, UserResponse, UserUpdateUsernameRequest} from "../model/user_model";
+import {
+    DeleteAccountRequest,
+    UserResponse,
+    UserUpdateEmailRequest,
+    UserUpdateUsernameRequest
+} from "../model/user_model";
 
 export class UserController {
     static async getUserProfile(req: AuthUserRequest, res: Response, next: NextFunction) {
@@ -48,6 +53,30 @@ export class UserController {
                 status: e.status,
             });
 
+            next(e);
+        }
+    }
+
+    static async sendOTPEmail(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const request: UserUpdateEmailRequest = {
+                email: req.body.email
+            }
+
+            await UserService.sendOtpUpdateEmail(req.user!, request);
+            res.status(200).json({
+                status: "success",
+                message: "OTP sent successfully"
+            });
+
+            logger.info("Send OTP success", {
+                userId: req.user!.id,
+            });
+        } catch (e: any) {
+            logger.warn("Send OTP failed", {
+                message: e.message,
+                status: e.status,
+            });
             next(e);
         }
     }
