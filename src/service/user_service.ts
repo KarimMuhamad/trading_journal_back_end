@@ -51,6 +51,6 @@ export class UserService {
             email: user.email,
             username: user.username,
             deleteDate: deleteDate.toLocaleString(),
-        })
+        });
     }
 }

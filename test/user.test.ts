@@ -111,4 +111,50 @@ describe('PATCH ' + buildUrl('/users/me'), () => {
         expect(response.body.status).toBe('error');
         expect(response.error).toBeDefined();
     });
+});
+
+describe('DELETE ' + buildUrl('/users/me'), () => {
+    let accessToken: string;
+
+    beforeEach(async () => {
+       await AuthTestUtils.createUser('test', process.env.EMAIL_TESTING as string, 'test123456');
+       const session = await AuthTestUtils.createSession('test', 'test123456');
+       accessToken = session.accessToken;
+    });
+
+    afterEach(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be able to soft delete account', async () => {
+        const response = await supertest(web).delete(buildUrl('/users/me')).set('Authorization', 'Bearer ' + accessToken).send({
+            password: 'test123456'
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be reject if password invalid', async () => {
+        const response = await supertest(web).delete(buildUrl('/users/me')).set('Authorization', 'Bearer ' + accessToken).send({
+            password: 'salah'
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(403);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject if invalid token', async () => {
+        const response = await supertest(web).delete(buildUrl('/users/me')).set('Authorization', 'Bearer ' + 'invalidAccessToken').send({
+           password: 'test123456'
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
 })

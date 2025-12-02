@@ -118,7 +118,7 @@ class EmailServices {
             template: "delete_account",
             context: {
                 userName: data.username,
-                deletionData: data.deleteDate,
+                deletionDate: data.deleteDate,
                 loginUrl,
                 year: new Date().getFullYear(),
             },
