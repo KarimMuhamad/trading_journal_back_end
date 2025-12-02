@@ -94,6 +94,7 @@ model AccountRecoveryTokens {
 model EmailChangeVerification {
   id         String   @id @default(uuid(7)) @db.Uuid
   user_id    String   @db.Uuid
+  new_email  String   @db.VarChar(100)
   otp        String   @db.VarChar(6)
   used       Boolean  @default(false)
   expires_at DateTime

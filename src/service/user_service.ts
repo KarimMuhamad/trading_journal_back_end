@@ -12,7 +12,6 @@ import {Validation} from "../validation/validation";
 import {UserValidation} from "../validation/user_validation";
 import argon2 from "argon2";
 import email_service from "../email/services/email_service";
-import {AuthValidation} from "../validation/auth_validation";
 import {generateRandomOTP} from "../utils/generateRandomOTP";
 
 export class UserService {
@@ -50,13 +49,14 @@ export class UserService {
         await prisma.emailChangeVerification.create({
             data: {
                 user_id: user.id,
+                new_email: validateReq.email!,
                 otp: OTP,
                 expires_at: expiryTime
             }
         });
 
         await email_service.sendOtpUpdateEmail({
-            email: validateReq.email,
+            email: validateReq.email!,
             username: user.username,
             otp: OTP,
             expiryTime: expiryTime.toLocaleString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
