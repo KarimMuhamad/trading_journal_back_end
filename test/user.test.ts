@@ -5,6 +5,7 @@ import supertest from "supertest";
 import {web} from "../src/application/web";
 import logger from "../src/application/logger";
 import prisma from "../src/application/database";
+import {generateRandomOTP} from "../src/utils/generateRandomOTP";
 
 
 
