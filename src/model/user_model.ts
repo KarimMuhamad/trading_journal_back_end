@@ -6,6 +6,10 @@ export type UserResponse = {
   email: string;
 };
 
+export type UserUpdateEmailRequest = {
+    email: string;
+}
+
 export type UserUpdateUsernameRequest = {
     username: string;
 }
