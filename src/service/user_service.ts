@@ -63,11 +63,11 @@ export class UserService {
         });
     }
 
-    static async verifyOtpUpdateEmail(user: User, otp: string) : Promise<void> {
+    static async verifyOTPUpdateEmail(user: User, req: UserUpdateEmailRequest) : Promise<UserResponse> {
         const verification = await prisma.emailChangeVerification.findFirst({
             where: {
                 user_id: user.id,
-                otp: otp,
+                otp: req.otp!,
                 used: false,
                 expires_at: { gt: new Date() }
             }
@@ -90,6 +90,8 @@ export class UserService {
                data: {used: true}
             });
         });
+
+        return toUserResponse(user);
     }
 
     static async deleteAccount(user: User, req: DeleteAccountRequest) : Promise<void> {
