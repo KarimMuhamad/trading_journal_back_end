@@ -63,6 +63,39 @@ export class UserService {
         });
     }
 
+    static async verifyOTPUpdateEmail(user: User, req: UserUpdateEmailRequest) : Promise<UserResponse> {
+        const verification = await prisma.emailChangeVerification.findFirst({
+            where: {
+                user_id: user.id,
+                otp: req.otp!,
+                used: false,
+                expires_at: { gt: new Date() }
+            }
+        });
+        if (!verification) throw new ErrorResponse(401, "Invalid or expired OTP Code");
+
+        await prisma.$transaction(async (tx) => {
+            await tx.user.update({
+                where: {id: verification.user_id},
+                data: {email: verification.new_email}
+            });
+
+            await tx.emailChangeVerification.update({
+                where: {id: verification.id},
+                data: {used: true}
+            });
+
+            await tx.emailChangeVerification.updateMany({
+               where: {user_id: verification.user_id, new_email: verification.new_email, used: false},
+               data: {used: true}
+            });
+        });
+
+        const userUpdated = await prisma.user.findUnique({where: {id: verification.user_id}});
+
+        return toUserResponse(userUpdated!);
+    }
+
     static async deleteAccount(user: User, req: DeleteAccountRequest) : Promise<void> {
         const isPasswordValid = await argon2.verify(user.password, req.password);
         if(!isPasswordValid) throw new ErrorResponse(403, "Invalid password");

@@ -81,6 +81,27 @@ export class UserController {
         }
     }
 
+    static async verifyOTP(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const request: UserUpdateEmailRequest = {
+                otp: req.body.otp
+            }
+
+            const response = await UserService.verifyOTPUpdateEmail(req.user!, request);
+            res.status(200).json({
+                status: "success",
+                message: "Email updated successfully",
+                data: response
+            });
+        } catch (e: any) {
+            logger.warn("Verify OTP failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
+
     static async deleteAccount(req: AuthUserRequest, res: Response, next: NextFunction) {
         try {
             const request: DeleteAccountRequest = {

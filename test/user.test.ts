@@ -230,3 +230,83 @@ describe('POST' + buildUrl('/users/me/request-otp'), () => {
         expect(response.error).toBeDefined();
     });
 });
+
+describe('POST' + buildUrl('/users/me/verify-otp'), () => {
+    let accessToken: string;
+    let userId: string;
+    const emailTesting = process.env.EMAIL_TESTING as string;
+    const otp = generateRandomOTP();
+
+    beforeEach(async () => {
+        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await AuthTestUtils.createSession('test', 'test123456');
+        accessToken = session.accessToken;
+        userId = session.userId;
+
+        await prisma.emailChangeVerification.create({
+            data: {
+                user_id: userId,
+                new_email: emailTesting,
+                otp: otp,
+                expires_at: new Date(Date.now() + 1000 * 60 * 6)
+            }
+        });
+    });
+
+    afterAll(async () => {
+        await AuthTestUtils.deleteAll();
+    });
+
+    it('should be able to verify update email', async () => {
+        const response = await supertest(web).patch(buildUrl('/users/email/verify-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
+            otp: otp
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be reject if token invalid', async () => {
+        const response = await supertest(web).patch(buildUrl('/users/email/verify-otp')).set('Authorization', 'Bearer' + ' ' + 'invalidAccessToken').send({
+            otp: otp
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject if otp invalid', async () => {
+        const response = await supertest(web).patch(buildUrl('/users/email/verify-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
+            otp: 'invalidOtp'
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject if otp expired', async () => {
+        await prisma.emailChangeVerification.updateMany({
+            where: {
+                user_id: userId!
+            },
+            data: {
+                expires_at: new Date(Date.now() - 1000 * 60 * 6)
+            }
+        });
+
+        const response = await supertest(web).patch(buildUrl('/users/email/verify-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
+            otp: otp
+        });
+
+        logger.info(response.body);
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+});
