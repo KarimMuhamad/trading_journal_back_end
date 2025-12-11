@@ -49,7 +49,7 @@ Base URL: `/api.domain/v1`
 {
   "status": "error",
   "message": "Username already exists",
-  "code": "USERNAME_EXISTS"
+  "code": "UNIQUE"
 }
 ```
 **Response 409 — Conflict (Email exists)**
@@ -57,7 +57,7 @@ Base URL: `/api.domain/v1`
 {
   "status": "error",
   "message": "Email already exists",
-  "code": "EMAIL_EXISTS"
+  "code": "UNIQUE"
 }
 ```
 
