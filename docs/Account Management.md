@@ -1,4 +1,5 @@
 # Trading Journal API Documentation
+## Account Management
 Backend: Node.js + Express + Prisma  
 Auth: JWT (Access & Refresh Tokens)  
 Format: JSON  
@@ -6,19 +7,31 @@ Version: 1.0.0
 Base URL: `/api.domain/v1`
 ---
 
-## Create Account
-- Method : `POST`
-- Endpoint : `/accounts`
-- Authorization : `Bearer <accessToken>`
-- Request Body
+# Table of Contents
+1. [Create Account](#1-create-account)
+2. [Get Account](#2-get-account)
+3. [Update Account](#3-update-account)
+4. [Delete Account](#4-delete-account)
+5. [Get All Accounts](#5-get-all-accounts)
+6. [Create New Trade Position](#6-create-new-trade-position)
+7. [Get All Trades by Account](#7-get-all-trades-by-account)
+
+---
+## 1. Create Account
+- Method: `POST`
+- Endpoint: `/accounts`
+- Authorization: `Bearer <accessToken>`
+
+Request Body
 ```json
 {
   "nickName": "karimfx",
   "exchange": "Binance",
-  "balance": "$1000"
+  "balance": 1000
 }
 ```
-- Response 201
+
+Response 201 — Success
 ```json
 {
   "status": "success",
@@ -27,105 +40,157 @@ Base URL: `/api.domain/v1`
     "id": 123,
     "nickName": "karimfx",
     "exchange": "Binance",
-    "balance": "1000"
+    "balance": 1000
   }
 }
 ```
-- Response 400
+
+Response 400 — Validation Error
 ```json
 {
   "status": "error",
-  "message": "Invalid request. Please check your input."
-}
-```
-- Response 401 
-```json
-{
-  "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Validation error",
+  "errors": [
+    { "field": "nickName", "message": "Nickname is required" }
+  ]
 }
 ```
 
-## Get Account
-- Method : `GET`
-- Endpoint : `/accounts/:id`
-- Authorization : `Bearer <accessToken>`
-- Response 200
+Response 401 — Unauthorized
 ```json
 {
-  "status" : "success",
-  "data" : {
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+
+---
+## 2. Get Account
+- Method: `GET`
+- Endpoint: `/accounts/:id`
+- Authorization: `Bearer <accessToken>`
+
+Response 200 — Success
+```json
+{
+  "status": "success",
+  "data": {
     "id": 123,
     "nickName": "karimfx",
     "exchange": "Binance",
-    "balance": "1000"
+    "balance": 1000
   }
 }
 ```
-- Response 401
+
+Response 404 — Not Found
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Account not found",
+  "code": "ACCOUNT_NOT_FOUND"
 }
 ```
 
-## Update Account
-- Method : `PATCH`
-- Endpoint : `/accounts/:id`
-- Authorization : `Bearer <accessToken>`
-- Request Body
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+
+---
+## 3. Update Account
+- Method: `PATCH`
+- Endpoint: `/accounts/:id`
+- Authorization: `Bearer <accessToken>`
+
+Request Body
 ```json
 {
   "nickName": "karimfx"
 }
 ```
-- Response 200
+
+Response 200 — Success
 ```json
 {
   "status": "success",
   "message": "Account updated successfully."
 }
 ```
-- Response 400
+
+Response 400 — Validation Error
 ```json
 {
   "status": "error",
-  "message": "Invalid request. Please check your input."
-}
-```
-- Response 401
-```json
-{
-  "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Validation error",
+  "errors": [
+    { "field": "nickName", "message": "Nickname must be a non-empty string" }
+  ]
 }
 ```
 
-## Delete Account
-- Method : `DELETE`
-- Endpoint : `/accounts/:id`
-- Authorization : `Bearer <accessToken>`
-- Response 200
+Response 404 — Not Found
+```json
+{
+  "status": "error",
+  "message": "Account not found",
+  "code": "ACCOUNT_NOT_FOUND"
+}
+```
+
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+
+---
+## 4. Delete Account
+- Method: `DELETE`
+- Endpoint: `/accounts/:id`
+- Authorization: `Bearer <accessToken>`
+
+Response 200 — Success
 ```json
 {
   "status": "success",
   "message": "Account deleted successfully."
 }
 ```
-- Response 401
+
+Response 404 — Not Found
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Account not found",
+  "code": "ACCOUNT_NOT_FOUND"
 }
 ```
 
-## Get All Accounts
-- Method : `GET`
-- Endpoint : `/accounts`
-- Authorization : `Bearer <accessToken>`
-- Response 200
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+
+---
+## 5. Get All Accounts
+- Method: `GET`
+- Endpoint: `/accounts`
+- Authorization: `Bearer <accessToken>`
+
+Response 200 — Success
 ```json
 {
   "status": "success",
@@ -134,30 +199,34 @@ Base URL: `/api.domain/v1`
       "id": 123,
       "nickName": "karimfx",
       "exchange": "Binance",
-      "balance": "$1000"
+      "balance": 1000
     },
     {
       "id": 456,
       "nickName": "ahmedfx",
       "exchange": "Binance",
-      "balance": "$2000"
+      "balance": 2000
     }
   ]
 }
 ```
-- Response 401
+
+Response 401 — Unauthorized
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
 }
 ```
+
 ---
-## Create New Trade Position
-- Method : `POST`
-- Endpoint : `/accounts/:accountId/trades`
-- Authorization : `Bearer <accessToken>`
-- Request Body
+## 6. Create New Trade Position
+- Method: `POST`
+- Endpoint: `/accounts/:accountId/trades`
+- Authorization: `Bearer <accessToken>`
+
+Request Body
 ```json
 {
   "entry_time": "2025-11-13T10:00:00Z",
@@ -167,14 +236,13 @@ Base URL: `/api.domain/v1`
   "position_size": 0.5,
   "sl_price": 67000.00,
   "tp_price": 70000.00,
-  "entry_time": "2025-11-13T10:00:00Z",
   "note": "Breakout entry at resistance",
   "link_img": "https://cdn.example.com/trades/chart1.png",
   "playbook_ids": [1, 3]
 }
-
 ```
-- Response 201
+
+Response 201 — Success
 ```json
 {
   "status": "success",
@@ -192,28 +260,44 @@ Base URL: `/api.domain/v1`
     ]
   }
 }
+```
 
-```
-- Response 400
+Response 400 — Validation Error
 ```json
 {
   "status": "error",
-  "message": "Invalid trade data."
+  "message": "Validation error",
+  "errors": [
+    { "field": "pair", "message": "Pair is required" }
+  ]
 }
 ```
-- Response 401
+
+Response 404 — Account Not Found
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Account not found",
+  "code": "ACCOUNT_NOT_FOUND"
 }
 ```
+
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+
 ---
-## Get All Trade by Account
-- Method : `GET`
-- Endpoint : `/accounts/:accountId/trades`
-- Authorization : `Bearer <accessToken>`
-- Response 200
+## 7. Get All Trades by Account
+- Method: `GET`
+- Endpoint: `/accounts/:accountId/trades`
+- Authorization: `Bearer <accessToken>`
+
+Response 200 — Success
 ```json
 {
   "status": "success",
@@ -239,21 +323,26 @@ Base URL: `/api.domain/v1`
   ]
 }
 ```
-- Response 404
+
+Response 404 — No Trades Found
 ```json
 {
   "status": "error",
-  "message": "No trades found for this account."
+  "message": "No trades found for this account",
+  "code": "TRADES_NOT_FOUND"
 }
 ```
-- Response 401
+
+Response 401 — Unauthorized
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
 }
 ```
-- Query Params
+
+Query Parameters
 
 | Param    | Type   | Default | Example                             |
 | -------- | ------ | ------- | ----------------------------------- |

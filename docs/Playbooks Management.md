@@ -1,4 +1,5 @@
 # Trading Journal API Documentation
+## Playbooks Management
 Backend: Node.js + Express + Prisma  
 Auth: JWT (Access & Refresh Tokens)  
 Format: JSON  
@@ -6,18 +7,32 @@ Version: 1.0.0
 Base URL: `/api.domain/v1`
 ---
 
-## Create Playbook
-- Method : `POST`
-- Endpoint : `/playbooks`
-- Authorization : `Bearer <accessToken>`
-- Request Body
+# Table of Contents
+1. [Create Playbook](#1-create-playbook)
+2. [Get All Playbooks](#2-get-all-playbooks)
+3. [Get Playbook by ID](#3-get-playbook-by-id)
+4. [Update Playbook](#4-update-playbook)
+5. [Delete Playbook](#5-delete-playbook)
+
+---
+## 1. Create Playbook
+- Method: `POST`
+- Endpoint: `/playbooks`
+- Authorization: `Bearer <accessToken>`
+
+Request Body
 ```json
 {
   "name": "Extreme Order Block",
-  "description": "A sample playbook for extreme order block strategy.",
+  "description": "A sample playbook for extreme order block strategy."
 }
 ```
-- Response 201
+
+Validation Rules
+- `name` (required): 1–100 characters
+- `description` (optional): up to 2000 characters
+
+Response 201 — Success
 ```json
 {
   "status": "success",
@@ -25,30 +40,38 @@ Base URL: `/api.domain/v1`
   "data": {
     "id": 123,
     "name": "Extreme Order Block",
-    "description": "A sample playbook for extreme order block strategy.",
+    "description": "A sample playbook for extreme order block strategy."
   }
 }
 ```
-- Response 400
+
+Response 400 — Validation Error
 ```json
 {
   "status": "error",
-  "message": "Invalid request. Please check your input."
-}
-```
-- Response 401
-```json
-{
-  "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Validation error",
+  "errors": [
+    { "field": "name", "message": "Name is required" }
+  ]
 }
 ```
 
-## Get All Playbooks
-- Method : `GET`
-- Endpoint : `/playbooks`
-- Authorization : `Bearer <accessToken>`
-- Response 200
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+
+---
+## 2. Get All Playbooks
+- Method: `GET`
+- Endpoint: `/playbooks`
+- Authorization: `Bearer <accessToken>`
+
+Response 200 — Success
 ```json
 {
   "status": "success",
@@ -66,50 +89,68 @@ Base URL: `/api.domain/v1`
   ]
 }
 ```
-- Response 401
+
+Response 401 — Unauthorized
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
 }
 ```
 
-## Get Playbook by ID
-- Method : `GET`
-- Endpoint : `/playbooks/:id`
-- Authorization : `Bearer <accessToken>`
-- Response 200
+---
+## 3. Get Playbook by ID
+- Method: `GET`
+- Endpoint: `/playbooks/:id`
+- Authorization: `Bearer <accessToken>`
+
+Response 200 — Success
 ```json
 {
   "status": "success",
-  "message": "Get Playbook successfully.",
-  "data" : {
+  "message": "Playbook retrieved successfully.",
+  "data": {
     "id": 123,
     "name": "Extreme Order Block",
-    "description": "A sample playbook for extreme order block strategy.",
+    "description": "A sample playbook for extreme order block strategy."
   }
 }
 ```
-- Response 401
+
+Response 404 — Not Found
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Playbook not found",
+  "code": "PLAYBOOK_NOT_FOUND"
 }
 ```
 
-## Update Playbook
-- Method : `PATCH`
-- Endpoint : `/playbooks/:id`
-- Authorization : `Bearer <accessToken>`
-- Request Body
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+
+---
+## 4. Update Playbook
+- Method: `PATCH`
+- Endpoint: `/playbooks/:id`
+- Authorization: `Bearer <accessToken>`
+
+Request Body
 ```json
 {
   "name": "Extreme Order Block",
-  "description": "A sample playbook for extreme order block strategy.",
+  "description": "A sample playbook for extreme order block strategy."
 }
 ```
-- Response 200
+
+Response 200 — Success
 ```json
 {
   "status": "success",
@@ -117,40 +158,68 @@ Base URL: `/api.domain/v1`
   "data": {
     "id": 123,
     "name": "Extreme Order Block",
-    "description": "A sample playbook for extreme order block strategy.",
+    "description": "A sample playbook for extreme order block strategy."
   }
 }
 ```
-- Response 400
+
+Response 400 — Validation Error
 ```json
 {
   "status": "error",
-  "message": "Invalid request. Please check your input."
-}
-```
-- Response 401
-```json
-{
-  "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Validation error",
+  "errors": [
+    { "field": "name", "message": "Name must be between 1 and 100 characters" }
+  ]
 }
 ```
 
-## Delete Playbook
-- Method : `DELETE`
-- Endpoint : `/playbooks/:id`
-- Authorization : `Bearer <accessToken>`
-- Response 200
-```json
-{
-  "status": "success",
-  "message": "Playbook deleted successfully.",
-}
-```
-- Response 401
+Response 404 — Not Found
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Playbook not found",
+  "code": "PLAYBOOK_NOT_FOUND"
+}
+```
+
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+
+---
+## 5. Delete Playbook
+- Method: `DELETE`
+- Endpoint: `/playbooks/:id`
+- Authorization: `Bearer <accessToken>`
+
+Response 200 — Success
+```json
+{
+  "status": "success",
+  "message": "Playbook deleted successfully."
+}
+```
+
+Response 404 — Not Found
+```json
+{
+  "status": "error",
+  "message": "Playbook not found",
+  "code": "PLAYBOOK_NOT_FOUND"
+}
+```
+
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
 }
 ```

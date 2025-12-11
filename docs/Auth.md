@@ -1,4 +1,5 @@
 # Trading Journal API Documentation
+## Authentication
 Backend: Node.js + Express + Prisma  
 Auth: JWT (Access & Refresh Tokens)  
 Format: JSON  
@@ -6,12 +7,24 @@ Version: 1.0.0
 Base URL: `/api.domain/v1`
 ---
 
-## Authentication
+# Table of Contents
+1. [Register User](#1-register-user)
+2. [Login User](#2-login-user)
+3. [Logout User](#3-logout-user)
+4. [Refresh Access Token](#4-refresh-access-token)
+5. [Send Email Verification Link](#5-send-email-verification-link)
+6. [Verify Email](#6-verify-email)
+7. [Change Password (Profile)](#7-change-password-profile)
+8. [Forgot Password](#8-forgot-password)
+9. [Reset Password Using Email Link](#9-reset-password-using-email-link)
+10. [Recover Account](#10-recover-account)
 
-### Register User
-- Method : `POST`
-- Endpoint : `/auth/register`
-- Request Body
+---
+## 1. Register User
+- Method: `POST`
+- Endpoint: `/auth/register`
+
+**Request Body**
 ```json
 {
   "username": "karimfx",
@@ -19,7 +32,7 @@ Base URL: `/api.domain/v1`
   "password": "StrongPass!23"
 }
 ```
-- Response 201
+**Response 201 — Success**
 ```json
 {
   "status": "success",
@@ -31,33 +44,52 @@ Base URL: `/api.domain/v1`
   }
 }
 ```
-- Response 409
+**Response 409 — Conflict (Username exists)**
 ```json
 {
   "status": "error",
-  "message": "Username or email already exists."
+  "message": "Username already exists",
+  "code": "USERNAME_EXISTS"
 }
 ```
-- Response 400
+**Response 409 — Conflict (Email exists)**
 ```json
 {
   "status": "error",
-  "message": "Validation error"
+  "message": "Email already exists",
+  "code": "EMAIL_EXISTS"
+}
+```
+
+**Response 400 — Validation Error**
+```json
+{
+  "status": "error",
+  "message": "Validation error",
+  "errors": [
+    { "field": "username", "message": "Username is required" },
+    { "field": "email", "message": "Email is invalid" },
+    { "field": "password", "message": "Password must meet complexity requirements" }
+  ]
 }
 ```
 ---
 
-### Login User
-- Method : `POST`
-- Endpoint : `/auth/login`
-- Request Body
+## 2. Login User
+- Method: `POST`
+- Endpoint: `/auth/login`
+
+**Request Body**
 ```json
 {
-  "email": "karim@example.com",
+  "identifier": "karim@example.com",
   "password": "StrongPass!23"
 }
 ```
-- Response 200
+Notes
+- `identifier` accepts either email or username.
+
+**Response 200 — Success**
 ```json
 {
   "status": "success",
@@ -71,7 +103,7 @@ Base URL: `/api.domain/v1`
   "accessToken": "<accessToken>"
 }
 ```
-- `Set Cookie`
+**Set-Cookie**
 ```json
 {
   "refreshToken": "<refreshToken>",
@@ -79,86 +111,102 @@ Base URL: `/api.domain/v1`
   "secure": true,
   "sameSite": "Strict",
   "path": "/auth/refresh",
-  "Max-Age": 2592000 // 1 Month
+  "Max-Age": 2592000
 }
 ```
-- Response 200
+**Response 200 — Recovery Needed**
 ```json
 {
   "status": "RECOVERY_NEEDED",
-  "message": "Your account has been deleted and you can still recovered.",
-  "recoveryPeriod": 23,
-  "recoveryToken": "<token>"
+  "message": "Account recovery needed. Your account has been scheduled for deletion.",
+  "recovery_period": 300000,
+  "token": "<token>"
 }
 ```
 
-- Response 401
+**Response 401 — Invalid Credentials**
 ```json
 {
   "status": "error",
-  "message": "Invalid email or password."
+  "message": "Invalid email/username or password",
+  "code": "AUTH_INVALID_CREDENTIALS"
 }
 ```
-- Response 400
+**Response 400 — Validation Error**
 ```json
 {
   "status": "error",
-  "message": "Validation error"
+  "message": "Validation error",
+  "errors": [
+    { "field": "identifier", "message": "Identifier is required" },
+    { "field": "password", "message": "Password is required" }
+  ]
 }
 ```
 ---
 
-### Logout User
-- Method : `DELETE`
-- Endpoint : `/auth/logout`
-- Authorization : `Bearer <accessToken>`
-- Response 200
+## 3. Logout User
+- Method: `DELETE`
+- Endpoint: `/auth/logout`
+- Authorization: `Bearer <accessToken>`
+
+**Response 200 — Success**
 ```json
 {
   "status": "success",
   "message": "Logout successful."
 }
 ```
-- Cookie
+**Clear Cookie**
 ```json
 {
   "refreshToken": "",
   "maxAge": 0
 }
 ```
+**Response 401 — Unauthorized**
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
 ---
 
-### Refresh Access Token
-- Method : `POST`
-- Endpoint : `/auth/refresh`
-- Cookie
+## 4. Refresh Access Token
+- Method: `POST`
+- Endpoint: `/auth/refresh`
+
+**Cookie**
 ```json
 {
   "refreshToken": "<refreshToken>"
 }
 ```
-- Response 200
+**Response 200 — Success**
 ```json
 {
   "status": "success",
   "message": "Access token refreshed successfully.",
   "data" : {
-    ""id": 1,
+    "id": 1,
     "username": "karimfx",
     "email": "karim@example.com",
-    "isVerified": false"
+    "isVerified": false
   },
   "accessToken": "<newAccessToken>"
 }
 ```
-- Response 401
+**Response 401 — Invalid or Expired Refresh Token**
 ```json
 {
   "status": "error",
-  "message": "Invalid or expired refresh token."
+  "message": "Invalid or expired refresh token",
+  "code": "AUTH_REFRESH_TOKEN_INVALID"
 }
 ```
-- Cookie
+**Clear Cookie**
 ```json
 {
   "refreshToken": "",
@@ -167,187 +215,229 @@ Base URL: `/api.domain/v1`
 ```
 ---
 
-### Verify Email Send Link
-- Method : `POST`
-- Endpoint : `/auth/email/verify/send`
-- Authorization : `Bearer <accessToken>`
-- Response 200
+## 5. Send Email Verification Link
+- Method: `POST`
+- Endpoint: `/auth/email/verify/send`
+- Authorization: `Bearer <accessToken>`
+
+**Response 200 — Success**
 ```json
 {
   "status": "success",
   "message": "Verification email sent successfully. Please check your email."
 }
 ```
-- Response 400
+**Response 400 — Already Verified**
 ```json
 {
   "status": "error",
-  "message": "User already verified."
+  "message": "User already verified",
+  "code": "USER_ALREADY_VERIFIED"
 }
 ```
-- Response 429
+**Response 429 — Too Many Requests**
 ```json
 {
   "status": "error",
-  "message": "Too many requests. Please try again later."
+  "message": "Too many requests. Please try again later.",
+  "code": "RATE_LIMIT_EXCEEDED"
 }
 ```
-- Response 401
+**Response 401 — Unauthorized**
 ```json
 {
   "status": "error",
-  "message": "Invalid or expired access token."
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
 }
 ```
 
-### Verify Email
-- Method : `GET`
-- Endpoint : `/auth/email/verify`
-- Response 200
+## 6. Verify Email
+- Method: `GET`
+- Endpoint: `/auth/email/verify`
+
+**Response 200 — Success**
 ```json
 {
   "status": "success",
   "message": "Email verified successfully."
 }
 ```
-- Response 404
-```json
-{
-  "message": "User not found."
-}
-```
-- Response 401
+**Response 404 — User Not Found**
 ```json
 {
   "status": "error",
-  "message": "Invalid or expired token."
+  "message": "User not found",
+  "code": "USER_NOT_FOUND"
+}
+```
+**Response 401 — Invalid or Expired Link**
+```json
+{
+  "status": "error",
+  "message": "Invalid or expired verification link",
+  "code": "EMAIL_VERIFICATION_INVALID"
+}
+```
+**Response 409 — Link Already Used**
+```json
+{
+  "status": "error",
+  "message": "Verification link already used",
+  "code": "EMAIL_VERIFICATION_USED"
 }
 ```
 ---
 
-### Reset Password via Profile Page
-- Method : `PATCH`
-- Endpoint : `/auth/changePassword`
-- Authorization : `Bearer <accessToken>`
-- Request Body
+## 7. Change Password (Profile)
+- Method: `PATCH`
+- Endpoint: `/auth/changePassword`
+- Authorization: `Bearer <accessToken>`
+
+**Request Body**
 ```json
 {
   "currentPassword": "StrongPass!23",
   "newPassword": "NewStrongPass!45"
 }
 ```
-- Response 200
+**Response 200 — Success**
 ```json
 {
   "status": "success",
   "message": "Password changed successfully."
 }
 ```
-- Cookie
+Note: This action invalidates existing sessions.
+
+**Clear Cookie**
 ```json
 {
   "refreshToken": "",
   "maxAge": 0
 }
 ```
-- Response 400
+**Response 401 — Incorrect Current Password**
 ```json
 {
   "status": "error",
-  "message": "Current password is incorrect."
+  "message": "Invalid current password",
+  "code": "PASSWORD_INCORRECT"
 }
 ```
-- Response 401
+**Response 401 — Unauthorized**
 ```json
 {
   "status": "error",
-  "message": "Invalid or expired access token."
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
 }
 ```
 ---
 
-### Forgot Password
-- Method : `POST`
-- Endpoint : `/auth/forgotPassword`
-- Request Body
+## 8. Forgot Password
+- Method: `POST`
+- Endpoint: `/auth/forgotPassword`
+
+**Request Body**
 ```json
 {
   "email": "karim@example.com"
 }
 ```
-- Response 200
+**Response 200 — Success**
 ```json
 {
   "status": "success",
-  "message": "Please Check your email for reset password link."
+  "message": "Please check your email for the password reset link."
 }
 ```
-- Response 404
+**Response 404 — User Not Found**
 ```json
 {
   "status": "error",
-  "message": "User not found."
+  "message": "User not found",
+  "code": "USER_NOT_FOUND"
 }
 ```
-- Response 429
+**Response 429 — Too Many Requests**
 ```json
 {
   "status": "error",
-  "message": "Too many requests. Please try again later."
+  "message": "Too many requests. Please try again later.",
+  "code": "RATE_LIMIT_EXCEEDED"
 }
 ```
 
-### Rest Password Using Link in Email
-- Method : `POST`
-- Endpoint : `/forgot-password/reset?token=<token>`
-- Request Body
+## 9. Reset Password Using Email Link
+- Method: `POST`
+- Endpoint: `/forgot-password/reset?token=<token>`
+
+**Request Body**
 ```json
 {
-  "token": "<token>"
+  "token": "<token>",
+  "newPassword": "NewStrongPass!45"
 }
 ```
-- Response 200
+**Response 200 — Success**
 ```json
 {
   "status": "success",
-  "message": "Password Reset Succesfuly"
+  "message": "Password reset successfully"
 }
 ```
-- Response 404
+**Response 404 — User Not Found**
 ```json
 {
   "status": "error",
-  "message": "User not found."
-}
-- Response 401
-```json
-{
-  "status": "error",
-  "message": "Invalid or expired token."
+  "message": "User not found",
+  "code": "USER_NOT_FOUND"
 }
 ```
-- Response 429
+**Response 401 — Invalid or Expired Link**
 ```json
 {
   "status": "error",
-  "message": "Too many requests. Please try again later."
+  "message": "Invalid or expired password reset link",
+  "code": "PASSWORD_RESET_INVALID"
+}
+```
+**Response 409 — Link Already Used**
+```json
+{
+  "status": "error",
+  "message": "Password reset link already used",
+  "code": "PASSWORD_RESET_USED"
+}
+```
+
+**Response 429 — Too Many Requests**
+```json
+{
+  "status": "error",
+  "message": "Too many requests. Please try again later.",
+  "code": "RATE_LIMIT_EXCEEDED"
 }
 ```
 ---
 
-### Recovery Account
-- Method : `POST`
-- Endpoint : `/auth/recovery?token=<token>`
-- Response 200
+## 10. Recover Account
+- Method: `POST`
+- Endpoint: `/auth/recovery?token=<token>`
+
+**Response 200 — Success**
 ```json
 {
   "status": "success",
-  "message": "Account recovered successfully. Please Log In again",
+  "message": "Account recovered successfully. Please Log In again"
 }
 ```
-- Response 401
+**Response 401 — Invalid or Expired Token**
 ```json
 {
-  "status": "Invalid or Expired Token"
+  "status": "error",
+  "message": "Invalid or expired account recovery token",
+  "code": "ACCOUNT_RECOVERY_INVALID"
 }
 ```
