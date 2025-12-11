@@ -1,4 +1,5 @@
 # Trading Journal API Documentation
+## Trade
 Backend: Node.js + Express + Prisma  
 Auth: JWT (Access & Refresh Tokens)  
 Format: JSON  
@@ -6,15 +7,21 @@ Version: 1.0.0
 Base URL: `/api.domain/v1`
 ---
 
-## Get Trade Detail
-- Method : `GET`
-- Endpoint : `/trades/:tradeId`
-- Authorization : `Bearer <accessToken>`
-- Response 200
+# Table of Contents
+1. [Get Trade Detail](#1-get-trade-detail)
+2. [Close Running Trade](#2-close-running-trade)
+
+---
+## 1. Get Trade Detail
+- Method: `GET`
+- Endpoint: `/trades/:tradeId`
+- Authorization: `Bearer <accessToken>`
+
+Response 200 — Success
 ```json
 {
   "status": "success",
-  "data" : {
+  "data": {
     "id": 201,
     "account_id": 12,
     "pair": "BTCUSDT",
@@ -38,33 +45,40 @@ Base URL: `/api.domain/v1`
   }
 }
 ```
-- Response 404
+
+Response 404 — Not Found
 ```json
 {
   "status": "error",
-  "message": "Trade not found."
+  "message": "Trade not found",
+  "code": "TRADE_NOT_FOUND"
 }
 ```
-- Response 401
+
+Response 401 — Unauthorized
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
 }
 ```
+
 ---
-## Close Running Trade
-- Method : `PATCH`
-- Endpoint : `/trades/:tradeId`
-- Authorization : `Bearer <accessToken>`
-- Request Body
+## 2. Close Running Trade
+- Method: `PATCH`
+- Endpoint: `/trades/:tradeId`
+- Authorization: `Bearer <accessToken>`
+
+Request Body
 ```json
 {
   "exit_price": 69500.00,
-  "exit_time": "2025-11-13T14:30:00Z",
+  "exit_time": "2025-11-13T14:30:00Z"
 }
 ```
-- Response 200
+
+Response 200 — Success
 ```json
 {
   "status": "success",
@@ -85,17 +99,33 @@ Base URL: `/api.domain/v1`
   }
 }
 ```
-- Response 404
+
+Response 400 — Validation Error
 ```json
 {
   "status": "error",
-  "message": "Trade not found."
+  "message": "Validation error",
+  "errors": [
+    { "field": "exit_price", "message": "exit_price must be a positive number" },
+    { "field": "exit_time", "message": "exit_time must be an ISO 8601 datetime" }
+  ]
 }
 ```
-- Response 401
+
+Response 404 — Not Found
 ```json
 {
   "status": "error",
-  "message": "Unauthorized. Please log in."
+  "message": "Trade not found",
+  "code": "TRADE_NOT_FOUND"
+}
+```
+
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
 }
 ```
