@@ -308,7 +308,7 @@ Notes
   "message": "Password changed successfully."
 }
 ```
-Note: This action invalidates existing sessions.
+*Note: This action invalidates existing sessions.*
 
 **Clear Cookie**
 ```json
@@ -317,6 +317,17 @@ Note: This action invalidates existing sessions.
   "maxAge": 0
 }
 ```
+**Response 400 — Validation error**
+```json
+{
+  "status": "error",
+  "message": "Validation error",
+  "errors": [
+    { "field": "password", "message": "Password must meet complexity requirements" }
+  ]
+}
+```
+
 **Response 401 — Incorrect Current Password**
 ```json
 {
