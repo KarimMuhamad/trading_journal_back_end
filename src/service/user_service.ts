@@ -13,6 +13,7 @@ import {UserValidation} from "../validation/user_validation";
 import argon2 from "argon2";
 import email_service from "../email/services/email_service";
 import {generateRandomOTP} from "../utils/generateRandomOTP";
+import { ErrorCode } from "../error/error-code";
 
 export class UserService {
     static async getUserProfile(user: User) : Promise<UserResponse> {
@@ -25,7 +26,7 @@ export class UserService {
     static async updateUserName(user: User, req: UserUpdateUsernameRequest) : Promise<UserResponse> {
         const validateReq = Validation.validate(UserValidation.UPDATEUSERNAME, req);
 
-        if (user.username === validateReq.username) throw new ErrorResponse(403, "Username cannot be the same");
+        if (user.username === validateReq.username) throw new ErrorResponse(403, "Username cannot be the same", ErrorCode.UNIQUE);
 
         if (validateReq.username) {
             const isUsernameExist = await prisma.user.findUnique({where: {username: validateReq.username}});
@@ -72,7 +73,7 @@ export class UserService {
                 expires_at: { gt: new Date() }
             }
         });
-        if (!verification) throw new ErrorResponse(401, "Invalid or expired OTP Code");
+        if (!verification) throw new ErrorResponse(401, "Invalid or expired OTP Code", ErrorCode.OTP_INVALID_OR_EXPIRED);
 
         await prisma.$transaction(async (tx) => {
             await tx.user.update({
@@ -98,9 +99,10 @@ export class UserService {
 
     static async deleteAccount(user: User, req: DeleteAccountRequest) : Promise<void> {
         const isPasswordValid = await argon2.verify(user.password, req.password);
-        if(!isPasswordValid) throw new ErrorResponse(403, "Invalid password");
+        if(!isPasswordValid) throw new ErrorResponse(403, "Invalid password", ErrorCode.PASSWORD_INCORRECT);
 
         const deleteDate = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 day
+        console.log(deleteDate.toLocaleString());
 
         await prisma.$transaction(async (tx) => {
             await tx.auth_session.updateMany({

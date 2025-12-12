@@ -230,7 +230,7 @@ export class AuthService {
             email: user.email,
             username: user.username,
             verificationToken: token,
-            expiryTime: expiredTime.toLocaleString(),
+            expiryTime: expiredTime.toLocaleString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
         });
     }
 
@@ -327,7 +327,7 @@ export class AuthService {
             email: user.email,
             resetToken: token,
             username: user.username,
-            expiryTIme: tokenExpiredAt.toLocaleString()
+            expiryTIme: tokenExpiredAt.toLocaleString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
         })
     }
 
