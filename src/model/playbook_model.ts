@@ -15,6 +15,6 @@ export function toPlaybookResponse(playbook: Playbooks): PlaybookResponse {
     return {
         id: playbook.id,
         name: playbook.name,
-        description: playbook.description,
+        description: playbook.description || "",
     }
 }
