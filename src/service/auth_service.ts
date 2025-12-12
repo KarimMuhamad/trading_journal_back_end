@@ -21,6 +21,7 @@ import logger from "../application/logger";
 import { parseCookieSession } from "../utils/parseCookieSession";
 import email_service from "../email/services/email_service";
 import { th } from "zod/v4/locales";
+import { ErrorCode } from "../error/error-code";
 
 export class AuthService {
 
@@ -34,7 +35,7 @@ export class AuthService {
         });
 
         if (isUsernameExists) {
-            throw new ErrorResponse(409, "Username already exists");
+            throw new ErrorResponse(409, "Username already exists", ErrorCode.UNIQUE);
         }
 
         const isEmailExists = await prisma.user.findFirst({
@@ -44,7 +45,7 @@ export class AuthService {
         });
 
         if (isEmailExists) {
-            throw new ErrorResponse(409, "Email already exists");
+            throw new ErrorResponse(409, "Email already exists", ErrorCode.UNIQUE);
         }
 
         registerRequest.password = await argon2.hash(registerRequest.password);
@@ -69,12 +70,12 @@ export class AuthService {
         });
 
         if (!user) {
-            throw new ErrorResponse(401, "Invalid Email/Username or Password");
+            throw new ErrorResponse(401, "Invalid Email/Username or Password", ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
 
         const isPasswordValid = await argon2.verify(user.password, loginRequest.password);
         if (!isPasswordValid) {
-            throw new ErrorResponse(401, "Invalid Email/Username or Password");
+            throw new ErrorResponse(401, "Invalid Email/Username or Password", ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
 
         if (user.deleted_at && user.deleted_expires_at! >= new Date()) {
@@ -97,7 +98,7 @@ export class AuthService {
             }
 
         } else if (user.deleted_at && user.deleted_expires_at! < new Date()) {
-            throw new ErrorResponse(401, "Invalid Email/Username or Password");
+            throw new ErrorResponse(401, "Invalid Email/Username or Password", ErrorCode.AUTH_INVALID_CREDENTIALS);
         }
 
         const refreshTokenExpiresIn = Date.now() + 1000 * 60 * 60 * 24 * 30; // 30 days
@@ -147,7 +148,7 @@ export class AuthService {
             }
         });
 
-        if (!session) throw new ErrorResponse(401, "Unauthorized, invalid session");
+        if (!session) throw new ErrorResponse(401, "Unauthorized, invalid session", ErrorCode.AUTH_UNAUTHORIZED);
 
         if (await argon2.verify(session.token, rt)) {
             await prisma.auth_session.update({
@@ -160,7 +161,7 @@ export class AuthService {
             return toAuthResponse(user);
 
         } else {
-            throw new ErrorResponse(401, "Unauthorized, invalid session");
+            throw new ErrorResponse(401, "Unauthorized, invalid session", ErrorCode.AUTH_UNAUTHORIZED);
         }
     }
 
@@ -174,7 +175,7 @@ export class AuthService {
             }
         });
 
-        if (!session) throw new ErrorResponse(401, "Unauthorized, invalid or expired session");
+        if (!session) throw new ErrorResponse(401, "Unauthorized, invalid or expired session", ErrorCode.AUTH_UNAUTHORIZED);
 
         const isValidSession = await argon2.verify(session.token, rt);
         if (!isValidSession) {
@@ -185,14 +186,14 @@ export class AuthService {
 
             logger.warn('Miss Match Session and Revoked it', { sessionJSON });
 
-            throw new ErrorResponse(401, "Unauthorized, invalid session");
+            throw new ErrorResponse(401, "Unauthorized, invalid session", ErrorCode.AUTH_UNAUTHORIZED);
         }
 
         const user = await prisma.user.findUnique({
             where: { id: session.user_id }
         });
 
-        if (!user) throw new ErrorResponse(401, "Unauthorized, invalid session User no longer exists");
+        if (!user) throw new ErrorResponse(401, "Unauthorized, invalid session User no longer exists", ErrorCode.AUTH_UNAUTHORIZED);
 
         const payload = { id: user.id };
         const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_TOKEN_SECRET!, { expiresIn: '25m' });
@@ -211,7 +212,7 @@ export class AuthService {
             },
         });
 
-        if (isUserVerified) throw new ErrorResponse(400, "User already verified");
+        if (isUserVerified) throw new ErrorResponse(400, "User already verified", ErrorCode.USER_ALREADY_VERIFIED);
 
         const token = crypto.randomBytes(32).toString('hex');
 
@@ -242,7 +243,7 @@ export class AuthService {
             }
         });
 
-        if (!verification) throw new ErrorResponse(401, "Invalid or expired verification link");
+        if (!verification) throw new ErrorResponse(401, "Invalid or expired verification link", ErrorCode.EMAIL_VERIFICATION_INVALID);
 
         await prisma.$transaction(async (tx) => {
             const updated = await tx.emailVerification.updateMany({
@@ -250,7 +251,7 @@ export class AuthService {
                 data: { used: true }
             });
 
-            if (updated.count === 0) throw new ErrorResponse(401, "Verification link already used");
+            if (updated.count === 0) throw new ErrorResponse(401, "Verification link already used", ErrorCode.EMAIL_VERIFICATION_USED);
 
             await tx.user.update({
                 where: { id: verification.user_id },
@@ -264,7 +265,7 @@ export class AuthService {
         const changePasswordRequest = Validation.validate(AuthValidation.CHANGEPASSWORD, req);
 
         const isCurrentPasswordValid = await argon2.verify(user.password, changePasswordRequest.currentPassword);
-        if (!isCurrentPasswordValid) throw new ErrorResponse(401, "Invalid current password");
+        if (!isCurrentPasswordValid) throw new ErrorResponse(401, "Invalid current password", ErrorCode.PASSWORD_INCORRECT);
 
         const hashedNewPassword = await argon2.hash(changePasswordRequest.newPassword);
 
@@ -308,7 +309,7 @@ export class AuthService {
             where: { email: forgotPasswordRequest.email }
         });
 
-        if (!user) throw new ErrorResponse(404, "User not found");
+        if (!user) throw new ErrorResponse(404, "User not found", ErrorCode.USER_NOT_FOUND);
 
         const token = crypto.randomBytes(32).toString('hex');
 
@@ -341,12 +342,12 @@ export class AuthService {
             }
         });
 
-        if (!passwordReset) throw new ErrorResponse(401, "Invalid or expired password reset link");
+        if (!passwordReset) throw new ErrorResponse(401, "Invalid or expired password reset link", ErrorCode.PASSWORD_RESET_INVALID);
 
         const user = await prisma.user.findUnique({
             where: { id: passwordReset.user_id }
         });
-        if (!user) throw new ErrorResponse(404, "User no longer exists");
+        if (!user) throw new ErrorResponse(404, "User no longer exists", ErrorCode.USER_NOT_FOUND);
 
         const requestNewPassword = Validation.validate(AuthValidation.RESETPASSWORD, req);
         const newPassword = await argon2.hash(requestNewPassword.newPassword!);
@@ -359,7 +360,7 @@ export class AuthService {
                 where: { id: passwordReset.id, used: false },
                 data: { used: true }
             });
-            if (mark.count === 0) throw new ErrorResponse(401, "Password reset link already used");
+            if (mark.count === 0) throw new ErrorResponse(401, "Password reset link already used", ErrorCode.PASSWORD_RESET_USED);
 
             await tx.user.update({
                 where: { id: passwordReset.user_id },
@@ -391,7 +392,7 @@ export class AuthService {
             }
         });
 
-        if (!recoveryToken) throw new ErrorResponse(401, "Invalid or expired account recovery token");
+        if (!recoveryToken) throw new ErrorResponse(401, "Invalid or expired account recovery token", ErrorCode.ACCOUNT_RECOVERY_INVALID);
 
         await prisma.$transaction(async (tx) => {
             await tx.accountRecoveryTokens.update({
