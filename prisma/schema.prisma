@@ -128,7 +128,7 @@ model Playbooks {
   id             String           @id @default(uuid(7)) @db.Uuid
   user_id        String           @db.Uuid
   name           String           @db.VarChar(255)
-  description    String           @db.VarChar(255)
+  description    String?          @db.Text
   created_at     DateTime         @default(now())
   updated_at     DateTime         @updatedAt
   deleted_at     DateTime?
