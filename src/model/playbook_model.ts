@@ -11,6 +11,11 @@ export type CreatePlaybookRequest = {
     description?: string;
 }
 
+export type UpdatePlaybookRequest = {
+    name?: string;
+    description?: string;
+}
+
 export function toPlaybookResponse(playbook: Playbooks): PlaybookResponse {
     return {
         id: playbook.id,
