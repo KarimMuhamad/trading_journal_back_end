@@ -12,6 +12,7 @@ export type CreatePlaybookRequest = {
 }
 
 export type UpdatePlaybookRequest = {
+    id: string;
     name?: string;
     description?: string;
 }
