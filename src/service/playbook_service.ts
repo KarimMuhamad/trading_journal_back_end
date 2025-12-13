@@ -29,12 +29,12 @@ export class PlaybookService {
         return playbook;
     }
 
-    static async updatePlaybook(user: User, req: UpdatePlaybookRequest, playbook_id: string): Promise<PlaybookResponse> {
+    static async updatePlaybook(user: User, req: UpdatePlaybookRequest): Promise<PlaybookResponse> {
         const validateReq = Validation.validate(PlaybookValidation.UPDATEPLAYBOOK, req);
-        await this.findPLaybookById(user.id, playbook_id);
+        await this.findPLaybookById(user.id, req.id);
 
         const result = await prisma.playbooks.update({
-            where: { id: playbook_id },
+            where: { id: req.id },
             data: {
                 name: validateReq.name,
                 description: validateReq.description,
