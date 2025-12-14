@@ -29,8 +29,8 @@ export class PlaybookService {
         return playbook;
     }
 
-    static async getPlaybookById(user_id: string, playbook_id: string) : Promise<PlaybookResponse> {
-        const playbook = await this.findPlaybookById(user_id, playbook_id);
+    static async getPlaybookById(user: User, playbook_id: string) : Promise<PlaybookResponse> {
+        const playbook = await this.findPlaybookById(user.id, playbook_id);
         return toPlaybookResponse(playbook);
     }
 

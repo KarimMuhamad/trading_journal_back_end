@@ -27,6 +27,24 @@ export class PlaybookController {
         }
     }
 
+    static async getPlayBookById(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const playbookId = req.params.playbookId;
+            const response = await PlaybookService.getPlaybookById(req.user!, playbookId);
+            res.status(200).json({
+                status: "success",
+                message: "Playbook fetched successfully",
+                data: response
+            });
+        } catch (e: any) {
+            logger.warn("Get Playbook failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
+
     static async updatePlaybook(req: AuthUserRequest, res: Response, next: NextFunction) {
         try {
             const request: UpdatePlaybookRequest = req.body as UpdatePlaybookRequest;
