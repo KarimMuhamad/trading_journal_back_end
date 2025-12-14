@@ -19,7 +19,7 @@ export class PlaybookService {
         return toPlaybookResponse(playbook);
     }
 
-    static async findPLaybookById(user_id: string, playbook_id: string) {
+    static async findPlaybookById(user_id: string, playbook_id: string) {
         const playbook = await prisma.playbooks.findUnique({
             where: {id: playbook_id, user_id: user_id}
         });
@@ -29,9 +29,14 @@ export class PlaybookService {
         return playbook;
     }
 
+    static async getPlaybookById(user_id: string, playbook_id: string) : Promise<PlaybookResponse> {
+        const playbook = await this.findPlaybookById(user_id, playbook_id);
+        return toPlaybookResponse(playbook);
+    }
+
     static async updatePlaybook(user: User, req: UpdatePlaybookRequest): Promise<PlaybookResponse> {
         const validateReq = Validation.validate(PlaybookValidation.UPDATEPLAYBOOK, req);
-        await this.findPLaybookById(user.id, req.id);
+        await this.findPlaybookById(user.id, req.id);
 
         const result = await prisma.playbooks.update({
             where: { id: req.id },
