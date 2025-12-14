@@ -8,8 +8,16 @@ export class PlaybookValidation {
     });
 
     static readonly UPDATEPLAYBOOK: ZodType = z.object({
-        id: z.string().min(10),
+        id: z.string().regex(
+            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+            "Invalid ID Format"
+        ),
         name: z.string().min(1).max(100).optional(),
         description: z.string().optional(),
     });
+
+    static readonly UUIDVALIDATOR: ZodType = z.string().regex(
+        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
+        "Invalid ID Format"
+    );
 }

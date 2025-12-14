@@ -36,6 +36,7 @@ export class PlaybookController {
                 message: "Playbook fetched successfully",
                 data: response
             });
+            logger.info("Get Playbook success", response);
         } catch (e: any) {
             logger.warn("Get Playbook failed", {
                 message: e.message,

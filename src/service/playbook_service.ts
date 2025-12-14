@@ -30,7 +30,8 @@ export class PlaybookService {
     }
 
     static async getPlaybookById(user: User, playbook_id: string) : Promise<PlaybookResponse> {
-        const playbook = await this.findPlaybookById(user.id, playbook_id);
+        const validateId = Validation.validate(PlaybookValidation.UUIDVALIDATOR, playbook_id);
+        const playbook = await this.findPlaybookById(user.id, validateId);
         return toPlaybookResponse(playbook);
     }
 
