@@ -30,7 +30,7 @@ export class PlaybookController {
     static async updatePlaybook(req: AuthUserRequest, res: Response, next: NextFunction) {
         try {
             const request: UpdatePlaybookRequest = req.body as UpdatePlaybookRequest;
-            request.id = req.params.id;
+            request.id = req.params.playbookId;
             const response = await PlaybookService.updatePlaybook(req.user!, request);
             res.status(200).json({
                 status: "success",
@@ -38,7 +38,7 @@ export class PlaybookController {
                 data: response
             });
 
-            logger.debug("Update Playboook Succes", JSON.stringify(response));
+            logger.info("Update Playboook Succes", response);
 
         } catch (e: any) {
             logger.warn("Create Playbook failed", {

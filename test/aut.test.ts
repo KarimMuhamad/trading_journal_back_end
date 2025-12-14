@@ -3,13 +3,14 @@ import { buildUrl } from "./routes";
 import supertest from "supertest";
 import { web } from "../src/application/web";
 import logger from "../src/application/logger";
-import { AuthTestUtils } from "./test_utils";
+import { TestDBUtils } from "./utils/prisma_helpers";
 import jwt from "jsonwebtoken";
 import prisma from "../src/application/database";
+import {ApiTestHelper} from "./utils/api_helper";
 
 describe('POST ' + buildUrl(''), () => {
-    afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to register user', async () => {
@@ -45,11 +46,11 @@ describe('POST' + buildUrl('/auth/login'), () => {
 
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
     });
 
     afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to login user with username', async () => {
@@ -134,16 +135,16 @@ describe('DELETE ' + buildUrl('/auth/logout'), () => {
     let sessionJSON: any;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
 
         userId = session.userId;
         accessToken = session.accessToken;
         sessionJSON = session.session;
     });
 
-    afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to logout user', async () => {
@@ -186,15 +187,15 @@ describe('POST ' + buildUrl('/auth/refresh'), () => {
     let sessionJSON: any;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
 
         userId = session.userId;
         sessionJSON = session.session;
     });
 
     afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be generate new Access Token', async () => {
@@ -240,16 +241,16 @@ describe('POST' + buildUrl('/auth/email/send'), () => {
     const emailTesting = process.env.EMAIL_TESTING as string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', emailTesting, 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', emailTesting, 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
 
         userId = session.userId;
         accessToken = session.accessToken;
         sessionJSON = session.session;
     });
 
-    afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
     });
 
     it('should be send a verification email', async () => {
@@ -276,8 +277,8 @@ describe('GET ' + buildUrl('/auth/email/verify'), () => {
     const emailTesting = process.env.EMAIL_TESTING as string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', emailTesting, 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', emailTesting, 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
 
         userId = session.userId;
         accessToken = session.accessToken;
@@ -285,7 +286,7 @@ describe('GET ' + buildUrl('/auth/email/verify'), () => {
     });
 
     afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be verify token email', async () => {
@@ -330,8 +331,8 @@ describe('PATCH ' + buildUrl('/auth/change-password'), () => {
     const emailTesting = process.env.EMAIL_TESTING as string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', emailTesting, 'currentPassword123');
-        const session = await AuthTestUtils.createSession('test', 'currentPassword123');
+        await TestDBUtils.createUser('test', emailTesting, 'currentPassword123');
+        const session = await ApiTestHelper.createSession('test', 'currentPassword123');
 
         userId = session.userId;
         accessToken = session.accessToken;
@@ -339,7 +340,7 @@ describe('PATCH ' + buildUrl('/auth/change-password'), () => {
     });
 
     afterEach(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to change password ', async () => {
@@ -383,11 +384,11 @@ describe('POST ' + buildUrl('/auth/forgot-password'), () => {
     const emailTesting = process.env.EMAIL_TESTING as string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', emailTesting, 'test123456');
+        await TestDBUtils.createUser('test', emailTesting, 'test123456');
     });
 
     afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to send reset password link', async () => {
@@ -411,8 +412,8 @@ describe('PATCH ' + buildUrl('/auth/reset-password'), () => {
     let record: any;
 
     beforeEach(async () => {
-        await AuthTestUtils.deleteAll(); // clear user & password reset table
-        await AuthTestUtils.createUser('test', emailTesting, 'oldPassword123');
+        await TestDBUtils.cleanDB(); // clear user & password reset table
+        await TestDBUtils.createUser('test', emailTesting, 'oldPassword123');
         await supertest(web)
             .post(buildUrl('/auth/forgot-password'))
             .send({ email: emailTesting })
@@ -422,7 +423,7 @@ describe('PATCH ' + buildUrl('/auth/reset-password'), () => {
     });
 
     afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should reset password successfully', async () => {
@@ -476,14 +477,14 @@ describe('PATCH ' + buildUrl('/auth/reset-password'), () => {
 
 describe('PRISMA EXTENSION - softDeleteExtension', () => {
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        await AuthTestUtils.createUser('test2', 'test2@dev.com', 'test123456');
-        await AuthTestUtils.createUser('test3', 'test3@dev.com', 'test123456');
-        await AuthTestUtils.createUser('test4', 'test4@dev.com', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        await TestDBUtils.createUser('test2', 'test2@dev.com', 'test123456');
+        await TestDBUtils.createUser('test3', 'test3@dev.com', 'test123456');
+        await TestDBUtils.createUser('test4', 'test4@dev.com', 'test123456');
     });
 
-    afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
     });
 
     it('should filtering out soft deleted records on findMany', async () => {
@@ -553,7 +554,7 @@ describe('POST ' + buildUrl('/auth/recovery?token=<token>'), () => {
     let token: string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
         await prisma.user.update({
             where: { username: 'test' },
             data: { deleted_at: new Date(), deleted_expires_at: new Date(Date.now() + 1000 * 60 * 30) }
@@ -565,7 +566,7 @@ describe('POST ' + buildUrl('/auth/recovery?token=<token>'), () => {
     });
 
     afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to recover soft deleted account', async () => {

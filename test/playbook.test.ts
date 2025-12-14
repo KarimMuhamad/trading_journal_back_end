@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import {buildUrl} from "./routes";
-import {AuthTestUtils} from "./test_utils";
+import {TestDBUtils} from "./test_utils";
 import supertest from "supertest";
 import {web} from "../src/application/web";
 import logger from "../src/application/logger";
@@ -11,13 +11,13 @@ describe('POST ' + buildUrl('/playbooks'), () => {
     let accessToken: string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await TestDBUtils.createSession('test', 'test123456');
         accessToken = session.accessToken;
     });
 
     afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleandDB();
     });
 
     it('should be able to create playbook', async () => {
@@ -67,5 +67,37 @@ describe('POST ' + buildUrl('/playbooks'), () => {
         expect(response.status).toBe(401);
         expect(response.body.status).toBe('error');
         expect(response.error).toBeDefined();
+    });
+});
+
+describe('PATCH' + buildUrl('/playbooks'), () => {
+    let accessToken: string;
+    let playbook;
+
+    beforeEach(async () => {
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await TestDBUtils.createSession('test', 'test123456');
+
+        accessToken = session.accessToken;
+
+        playbook = await supertest(web).post(buildUrl('/playbooks')).set('Authorization', 'Bearer ' + accessToken).send({
+            name: 'test playbook',
+            description: 'test description'
+        });
+    });
+
+    afterAll(async () => {
+        await TestDBUtils.cleandDB();
+    });
+
+    it('should be able to update playbook', async () => {
+        const playbook_id = playbook.body.data.id;
+        console.log(playbook_id);
+        const response = await supertest(web).patch(buildUrl(`/playbooks/${playbook_id}`)).set('Authorization', 'Bearer ' + accessToken).send({
+            name: 'test update playbook',
+            description: 'test update description'
+        });
+
+        logger.info(response.body);
     });
 });

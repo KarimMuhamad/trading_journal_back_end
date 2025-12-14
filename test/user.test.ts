@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import {buildUrl} from "./routes";
-import {AuthTestUtils} from "./test_utils";
+import {TestDBUtils} from "./test_utils";
 import supertest from "supertest";
 import {web} from "../src/application/web";
 import logger from "../src/application/logger";
@@ -13,13 +13,13 @@ describe('GET ' + buildUrl('/users/me'), () => {
     let accessToken: string;
 
    beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await TestDBUtils.createSession('test', 'test123456');
         accessToken = session.accessToken;
    });
 
    afterAll(async () => {
-      await AuthTestUtils.deleteAll();
+      await TestDBUtils.cleandDB();
    });
 
     it('should be able to get user profile', async () => {
@@ -45,13 +45,13 @@ describe('PATCH ' + buildUrl('/users/me'), () => {
     let accessToken: string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await TestDBUtils.createSession('test', 'test123456');
         accessToken = session.accessToken;
     });
 
     afterEach(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleandDB();
     });
 
     it('should be able to update user profile', async () => {
@@ -79,7 +79,7 @@ describe('PATCH ' + buildUrl('/users/me'), () => {
     });
 
     it('should be reject if username exist', async () => {
-        await AuthTestUtils.createUser('testExist', 'exist@dev.com', 'test123456');
+        await TestDBUtils.createUser('testExist', 'exist@dev.com', 'test123456');
         const response = await supertest(web).patch(buildUrl('/users/me')).set('Authorization', 'Bearer ' + accessToken).send({
             username: 'testExist'
         });
@@ -118,13 +118,13 @@ describe('DELETE ' + buildUrl('/users/me'), () => {
     let accessToken: string;
 
     beforeEach(async () => {
-       await AuthTestUtils.createUser('test', process.env.EMAIL_TESTING as string, 'test123456');
-       const session = await AuthTestUtils.createSession('test', 'test123456');
+       await TestDBUtils.createUser('test', process.env.EMAIL_TESTING as string, 'test123456');
+       const session = await TestDBUtils.createSession('test', 'test123456');
        accessToken = session.accessToken;
     });
 
     afterEach(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleandDB();
     });
 
     it('should be able to soft delete account', async () => {
@@ -165,13 +165,13 @@ describe('POST' + buildUrl('/users/me/request-otp'), () => {
     const emailTesting = process.env.EMAIL_TESTING as string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'firstemail@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'firstemail@dev.com', 'test123456');
+        const session = await TestDBUtils.createSession('test', 'test123456');
         accessToken = session.accessToken;
     });
 
     afterEach(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleandDB();
     });
 
     it('should be able to request otp', async () => {
@@ -208,7 +208,7 @@ describe('POST' + buildUrl('/users/me/request-otp'), () => {
     });
 
     it('should be reject if email exist', async () => {
-        await AuthTestUtils.createUser('test2', 'email2@dev.com', 'test123456');
+        await TestDBUtils.createUser('test2', 'email2@dev.com', 'test123456');
         const response = await supertest(web).post(buildUrl('/users/email/request-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
             email: 'email2@dev.com'
         });
@@ -238,8 +238,8 @@ describe('POST' + buildUrl('/users/me/verify-otp'), () => {
     const otp = generateRandomOTP();
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await TestDBUtils.createSession('test', 'test123456');
         accessToken = session.accessToken;
         userId = session.userId;
 
@@ -254,7 +254,7 @@ describe('POST' + buildUrl('/users/me/verify-otp'), () => {
     });
 
     afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleandDB();
     });
 
     it('should be able to verify update email', async () => {

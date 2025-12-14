@@ -3,9 +3,9 @@ import supertest from "supertest";
 import {web} from "../src/application/web";
 import {buildUrl} from "./routes";
 
-export class AuthTestUtils {
+export class TestDBUtils {
 
-    static async deleteAll () {
+    static async cleandDB () {
         await prisma.user.deleteMany();
     }
 
