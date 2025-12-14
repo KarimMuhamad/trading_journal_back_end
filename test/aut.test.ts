@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { buildUrl } from "./routes";
+import { buildUrl } from "./utils/routes";
 import supertest from "supertest";
 import { web } from "../src/application/web";
 import logger from "../src/application/logger";
@@ -25,7 +25,7 @@ describe('POST ' + buildUrl(''), () => {
         expect(response.body.status).toBe('success');
     });
 
-    it('should be reject register user with validation eror', async () => {
+    it('should be reject register user with validation error', async () => {
         const response = await supertest(web).post(buildUrl('/auth/register')).send({
             username: 'test',
             email: 'testdev.com',
@@ -49,7 +49,7 @@ describe('POST' + buildUrl('/auth/login'), () => {
         await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         await TestDBUtils.cleanDB();
     });
 
@@ -130,15 +130,15 @@ describe('POST' + buildUrl('/auth/login'), () => {
 });
 
 describe('DELETE ' + buildUrl('/auth/logout'), () => {
-    let userId: number;
+    let userId: string;
     let accessToken: string;
     let sessionJSON: any;
 
     beforeEach(async () => {
-        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
         const session = await ApiTestHelper.createSession('test', 'test123456');
 
-        userId = session.userId;
+        userId = user.id;
         accessToken = session.accessToken;
         sessionJSON = session.session;
     });
@@ -187,14 +187,14 @@ describe('POST ' + buildUrl('/auth/refresh'), () => {
     let sessionJSON: any;
 
     beforeEach(async () => {
-        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
         const session = await ApiTestHelper.createSession('test', 'test123456');
 
-        userId = session.userId;
+        userId = user.id;
         sessionJSON = session.session;
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         await TestDBUtils.cleanDB();
     });
 
@@ -235,16 +235,16 @@ describe('POST ' + buildUrl('/auth/refresh'), () => {
 });
 
 describe('POST' + buildUrl('/auth/email/send'), () => {
-    let userId: number;
+    let userId: string;
     let accessToken: string;
     let sessionJSON: any;
     const emailTesting = process.env.EMAIL_TESTING as string;
 
     beforeEach(async () => {
-        await TestDBUtils.createUser('test', emailTesting, 'test123456');
+        const user = await TestDBUtils.createUser('test', emailTesting, 'test123456');
         const session = await ApiTestHelper.createSession('test', 'test123456');
 
-        userId = session.userId;
+        userId = user.id;
         accessToken = session.accessToken;
         sessionJSON = session.session;
     });
@@ -277,15 +277,15 @@ describe('GET ' + buildUrl('/auth/email/verify'), () => {
     const emailTesting = process.env.EMAIL_TESTING as string;
 
     beforeEach(async () => {
-        await TestDBUtils.createUser('test', emailTesting, 'test123456');
+        const user = await TestDBUtils.createUser('test', emailTesting, 'test123456');
         const session = await ApiTestHelper.createSession('test', 'test123456');
 
-        userId = session.userId;
+        userId = user.id;
         accessToken = session.accessToken;
         sessionJSON = session.session;
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         await TestDBUtils.cleanDB();
     });
 
@@ -325,16 +325,16 @@ describe('GET ' + buildUrl('/auth/email/verify'), () => {
 });
 
 describe('PATCH ' + buildUrl('/auth/change-password'), () => {
-    let userId: number;
+    let userId: string;
     let accessToken: string;
     let sessionJSON: any;
     const emailTesting = process.env.EMAIL_TESTING as string;
 
     beforeEach(async () => {
-        await TestDBUtils.createUser('test', emailTesting, 'currentPassword123');
+        const user = await TestDBUtils.createUser('test', emailTesting, 'currentPassword123');
         const session = await ApiTestHelper.createSession('test', 'currentPassword123');
 
-        userId = session.userId;
+        userId = user.id;
         accessToken = session.accessToken;
         sessionJSON = session.session;
     });
@@ -387,7 +387,7 @@ describe('POST ' + buildUrl('/auth/forgot-password'), () => {
         await TestDBUtils.createUser('test', emailTesting, 'test123456');
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         await TestDBUtils.cleanDB();
     });
 
@@ -422,7 +422,7 @@ describe('PATCH ' + buildUrl('/auth/reset-password'), () => {
         record = await prisma.passwordReset.findFirst({});
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         await TestDBUtils.cleanDB();
     });
 
@@ -565,7 +565,7 @@ describe('POST ' + buildUrl('/auth/recovery?token=<token>'), () => {
         });
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
         await TestDBUtils.cleanDB();
     });
 

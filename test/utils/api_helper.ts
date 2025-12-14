@@ -1,6 +1,6 @@
 import supertest from "supertest";
 import {web} from "../../src/application/web";
-import {buildUrl} from "../routes";
+import {buildUrl} from "./routes";
 
 export class ApiTestHelper {
     static async createSession (ident: string = "testUser", password: string = "test123456") {
@@ -12,7 +12,6 @@ export class ApiTestHelper {
         if (response.status !== 200) throw new Error("Failed to create session");
 
         return {
-            userId: response.body.data.id,
             accessToken: response.body.accessToken,
             session: response.headers['set-cookie'][0].split(';')[0]
         }

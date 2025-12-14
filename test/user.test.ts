@@ -1,11 +1,12 @@
 import 'dotenv/config';
-import {buildUrl} from "./routes";
-import {TestDBUtils} from "./test_utils";
+import {buildUrl} from "./utils/routes";
+import { TestDBUtils } from "./utils/prisma_helpers";
 import supertest from "supertest";
 import {web} from "../src/application/web";
 import logger from "../src/application/logger";
 import prisma from "../src/application/database";
 import {generateRandomOTP} from "../src/utils/generateRandomOTP";
+import {ApiTestHelper} from "./utils/api_helper";
 
 
 
@@ -14,12 +15,12 @@ describe('GET ' + buildUrl('/users/me'), () => {
 
    beforeEach(async () => {
         await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await TestDBUtils.createSession('test', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
         accessToken = session.accessToken;
    });
 
-   afterAll(async () => {
-      await TestDBUtils.cleandDB();
+   afterEach(async () => {
+      await TestDBUtils.cleanDB();
    });
 
     it('should be able to get user profile', async () => {
@@ -46,12 +47,12 @@ describe('PATCH ' + buildUrl('/users/me'), () => {
 
     beforeEach(async () => {
         await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await TestDBUtils.createSession('test', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
         accessToken = session.accessToken;
     });
 
     afterEach(async () => {
-        await TestDBUtils.cleandDB();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to update user profile', async () => {
@@ -119,12 +120,12 @@ describe('DELETE ' + buildUrl('/users/me'), () => {
 
     beforeEach(async () => {
        await TestDBUtils.createUser('test', process.env.EMAIL_TESTING as string, 'test123456');
-       const session = await TestDBUtils.createSession('test', 'test123456');
+       const session = await ApiTestHelper.createSession('test', 'test123456');
        accessToken = session.accessToken;
     });
 
     afterEach(async () => {
-        await TestDBUtils.cleandDB();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to soft delete account', async () => {
@@ -166,12 +167,12 @@ describe('POST' + buildUrl('/users/me/request-otp'), () => {
 
     beforeEach(async () => {
         await TestDBUtils.createUser('test', 'firstemail@dev.com', 'test123456');
-        const session = await TestDBUtils.createSession('test', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
         accessToken = session.accessToken;
     });
 
     afterEach(async () => {
-        await TestDBUtils.cleandDB();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to request otp', async () => {
@@ -196,7 +197,7 @@ describe('POST' + buildUrl('/users/me/request-otp'), () => {
         expect(response.error).toBeDefined();
     });
 
-    it('should be reject validation eror', async () => {
+    it('should be reject validation error', async () => {
         const response = await supertest(web).post(buildUrl('/users/email/request-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
             email: 'firstemaildev.mail'
         });
@@ -238,10 +239,10 @@ describe('POST' + buildUrl('/users/me/verify-otp'), () => {
     const otp = generateRandomOTP();
 
     beforeEach(async () => {
-        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await TestDBUtils.createSession('test', 'test123456');
+        const user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
         accessToken = session.accessToken;
-        userId = session.userId;
+        userId = user.id;
 
         await prisma.emailChangeVerification.create({
             data: {
@@ -253,8 +254,8 @@ describe('POST' + buildUrl('/users/me/verify-otp'), () => {
         });
     });
 
-    afterAll(async () => {
-        await TestDBUtils.cleandDB();
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to verify update email', async () => {

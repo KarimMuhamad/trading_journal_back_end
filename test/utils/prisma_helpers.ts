@@ -10,4 +10,8 @@ export class TestDBUtils {
         const hashedPw = await argon2.hash(password);
         return prisma.user.create({data: {username, email, password: hashedPw}});
     }
+
+    static async createPlaybook(userId: string,name: string = "test playbook", description: string = "description test playbook") {
+        return prisma.playbooks.create({data: {user_id: userId, name, description}});
+    }
 }
