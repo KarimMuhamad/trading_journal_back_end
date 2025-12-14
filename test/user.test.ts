@@ -1,11 +1,12 @@
 import 'dotenv/config';
-import {buildUrl} from "./routes";
-import {AuthTestUtils} from "./test_utils";
+import {buildUrl} from "./utils/routes";
+import { TestDBUtils } from "./utils/prisma_helpers";
 import supertest from "supertest";
 import {web} from "../src/application/web";
 import logger from "../src/application/logger";
 import prisma from "../src/application/database";
 import {generateRandomOTP} from "../src/utils/generateRandomOTP";
+import {ApiTestHelper} from "./utils/api_helper";
 
 
 
@@ -13,13 +14,13 @@ describe('GET ' + buildUrl('/users/me'), () => {
     let accessToken: string;
 
    beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
         accessToken = session.accessToken;
    });
 
-   afterAll(async () => {
-      await AuthTestUtils.deleteAll();
+   afterEach(async () => {
+      await TestDBUtils.cleanDB();
    });
 
     it('should be able to get user profile', async () => {
@@ -45,13 +46,13 @@ describe('PATCH ' + buildUrl('/users/me'), () => {
     let accessToken: string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
         accessToken = session.accessToken;
     });
 
     afterEach(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to update user profile', async () => {
@@ -79,7 +80,7 @@ describe('PATCH ' + buildUrl('/users/me'), () => {
     });
 
     it('should be reject if username exist', async () => {
-        await AuthTestUtils.createUser('testExist', 'exist@dev.com', 'test123456');
+        await TestDBUtils.createUser('testExist', 'exist@dev.com', 'test123456');
         const response = await supertest(web).patch(buildUrl('/users/me')).set('Authorization', 'Bearer ' + accessToken).send({
             username: 'testExist'
         });
@@ -118,13 +119,13 @@ describe('DELETE ' + buildUrl('/users/me'), () => {
     let accessToken: string;
 
     beforeEach(async () => {
-       await AuthTestUtils.createUser('test', process.env.EMAIL_TESTING as string, 'test123456');
-       const session = await AuthTestUtils.createSession('test', 'test123456');
+       await TestDBUtils.createUser('test', process.env.EMAIL_TESTING as string, 'test123456');
+       const session = await ApiTestHelper.createSession('test', 'test123456');
        accessToken = session.accessToken;
     });
 
     afterEach(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to soft delete account', async () => {
@@ -165,13 +166,13 @@ describe('POST' + buildUrl('/users/me/request-otp'), () => {
     const emailTesting = process.env.EMAIL_TESTING as string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'firstemail@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        await TestDBUtils.createUser('test', 'firstemail@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
         accessToken = session.accessToken;
     });
 
     afterEach(async () => {
-        await AuthTestUtils.deleteAll();
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to request otp', async () => {
@@ -196,7 +197,7 @@ describe('POST' + buildUrl('/users/me/request-otp'), () => {
         expect(response.error).toBeDefined();
     });
 
-    it('should be reject validation eror', async () => {
+    it('should be reject validation error', async () => {
         const response = await supertest(web).post(buildUrl('/users/email/request-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
             email: 'firstemaildev.mail'
         });
@@ -208,7 +209,7 @@ describe('POST' + buildUrl('/users/me/request-otp'), () => {
     });
 
     it('should be reject if email exist', async () => {
-        await AuthTestUtils.createUser('test2', 'email2@dev.com', 'test123456');
+        await TestDBUtils.createUser('test2', 'email2@dev.com', 'test123456');
         const response = await supertest(web).post(buildUrl('/users/email/request-otp')).set('Authorization', 'Bearer' + ' ' + accessToken).send({
             email: 'email2@dev.com'
         });
@@ -238,10 +239,10 @@ describe('POST' + buildUrl('/users/me/verify-otp'), () => {
     const otp = generateRandomOTP();
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        const user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
         accessToken = session.accessToken;
-        userId = session.userId;
+        userId = user.id;
 
         await prisma.emailChangeVerification.create({
             data: {
@@ -253,8 +254,8 @@ describe('POST' + buildUrl('/users/me/verify-otp'), () => {
         });
     });
 
-    afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to verify update email', async () => {

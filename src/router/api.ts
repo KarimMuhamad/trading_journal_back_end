@@ -23,3 +23,4 @@ apiRouter.patch('/users/email/verify-otp', UserController.verifyOTP);
 
 // Playbook Endpoints
 apiRouter.post('/playbooks', PlaybookController.createPlaybook);
+apiRouter.patch('/playbooks/:playbookId', PlaybookController.updatePlaybook);

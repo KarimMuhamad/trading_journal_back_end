@@ -1,23 +1,24 @@
 import 'dotenv/config';
-import {buildUrl} from "./routes";
-import {AuthTestUtils} from "./test_utils";
+import {buildUrl} from "./utils/routes";
+import { TestDBUtils } from "./utils/prisma_helpers";
 import supertest from "supertest";
 import {web} from "../src/application/web";
 import logger from "../src/application/logger";
 import prisma from "../src/application/database";
 import {generateRandomOTP} from "../src/utils/generateRandomOTP";
+import {ApiTestHelper} from "./utils/api_helper";
 
 describe('POST ' + buildUrl('/playbooks'), () => {
     let accessToken: string;
 
     beforeEach(async () => {
-        await AuthTestUtils.createUser('test', 'test@dev.com', 'test123456');
-        const session = await AuthTestUtils.createSession('test', 'test123456');
+        const user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
         accessToken = session.accessToken;
     });
 
-    afterAll(async () => {
-        await AuthTestUtils.deleteAll();
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
     });
 
     it('should be able to create playbook', async () => {
@@ -64,6 +65,61 @@ describe('POST ' + buildUrl('/playbooks'), () => {
         });
 
         logger.info(response.body);
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+});
+
+describe('PATCH' + buildUrl('/playbooks'), () => {
+    let accessToken: string;
+    let playbook: any;
+
+    beforeEach(async () => {
+        const user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
+        playbook = await TestDBUtils.createPlaybook(user.id);
+
+        accessToken = session.accessToken;
+    });
+
+    afterAll(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to update playbook', async () => {
+        const response = await supertest(web).patch(buildUrl(`/playbooks/${playbook.id}`)).set('Authorization', 'Bearer ' + accessToken).send({
+            name: 'test update playbook',
+            description: 'test update description'
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.name).toBe('test update playbook');
+    });
+
+    it('should be reject with validation error', async () => {
+        const response = await supertest(web).patch(buildUrl(`/playbooks/${playbook.id}`)).set('Authorization', 'Bearer ' + accessToken).send({
+            name: '',
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+        expect(response.body.errors).toBeDefined();
+    });
+
+    it('should be reject if acces token invalid', async () => {
+        const response = await supertest(web).patch(buildUrl(`/playbooks/${playbook.id}`)).set('Authorization', 'Bearer ' + 'salah').send({
+            name: 'test update playbook',
+            description: 'test update description'
+        });
+
+        logger.info(response.body);
+
         expect(response.status).toBe(401);
         expect(response.body.status).toBe('error');
         expect(response.error).toBeDefined();
