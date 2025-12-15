@@ -1,7 +1,6 @@
 import prisma from "../application/database";
 import {
-    CreatePlaybookRequest,
-    GetAllPlaybooksRequest,
+    CreatePlaybookRequest, GetAllPlaybookDetailRequest, PlaybookDetailedResponse,
     PlaybookResponse,
     toPlaybookResponse,
     UpdatePlaybookRequest
@@ -12,6 +11,7 @@ import { User } from "../../prisma/generated/client";
 import { ErrorResponse } from "../error/error_response";
 import { ErrorCode } from "../error/error-code";
 import {Pageable} from "../model/page";
+import {calculatePlaybooksStats} from "../utils/calculatePlaybooksStats";
 
 export class PlaybookService {
     static async createPlaybook(user: User, req: CreatePlaybookRequest): Promise<PlaybookResponse> {
@@ -63,5 +63,65 @@ export class PlaybookService {
             orderBy: {created_at: 'desc'}
         });
         return playbooks.map(playbook => toPlaybookResponse(playbook));
+    }
+
+    static async getAllPlaybookDetailed(user: User, req: GetAllPlaybookDetailRequest): Promise<Pageable<PlaybookDetailedResponse>> {
+        const validateReq = Validation.validate(PlaybookValidation.GETALLPLAYBOOK, req);
+
+        let where: any = {user_id: user.id};
+        if(validateReq.search) {
+            where = {...where,
+                OR: [
+                    {name: {contains: validateReq.search, mode: 'insensitive'}},
+                    {description: {contains: validateReq.search, mode: 'insensitive'}}
+                ]
+            };
+        }
+
+        const skip = (validateReq.page - 1) * validateReq.size;
+        const total = await prisma.playbooks.count({where: where});
+
+        const playbooks = await prisma.playbooks.findMany({
+            where: where,
+            skip: skip,
+            take: validateReq.size,
+            orderBy: {created_at: 'desc'}
+        });
+
+        const playbooksIds = playbooks.map(playbook => playbook.id);
+
+        const relations = await prisma.tradePlaybooks.findMany({
+            where: {playbook_id: {in: playbooksIds}},
+            select: {
+                playbook_id: true,
+                trade: {
+                    select: {
+                        trade_result: true,
+                        pnl: true
+                    }
+                }
+            }
+        });
+
+        const tradeMap = new Map<string, {trade_result: string; pnl: number}[]>();
+
+        const data: PlaybookDetailedResponse[] = playbooks.map(pb => {
+            const trades = tradeMap.get(pb.id) ?? [];
+
+            return {
+                ...toPlaybookResponse(pb),
+                stats: calculatePlaybooksStats(trades)
+            }
+        });
+
+        return {
+            data,
+            paging: {
+                page: validateReq.page,
+                size: validateReq.size,
+                total: total
+            }
+        }
+
     }
 }

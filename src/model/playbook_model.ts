@@ -18,7 +18,7 @@ export type UpdatePlaybookRequest = {
 }
 
 export type GetAllPlaybookDetailRequest = {
-    name?: string;
+    search?: string;
     page: number;
     size: number;
     view: 'basic' | 'detailed';

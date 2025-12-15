@@ -22,9 +22,9 @@ export class PlaybookValidation {
     );
 
     static readonly GETALLPLAYBOOK: ZodType = z.object({
-        name: z.string().min(1).optional(),
-        page: z.number().min(1).positive(),
-        size: z.number().min(1).max(50).positive(),
+        search: z.string().min(1).optional(),
+        page: z.number().min(1).positive().default(1),
+        size: z.number().min(1).max(50).positive().default(5),
         view: z.enum(['basic', 'detailed']).optional()
     });
 }
