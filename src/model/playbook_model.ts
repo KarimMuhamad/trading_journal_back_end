@@ -21,7 +21,16 @@ export type GetAllPlaybooksRequest = {
     name?: string;
     page: number;
     size: number;
+    view: 'basic' | 'detailed';
 }
+
+export type PlaybookStats = {
+    total_trades: number;
+    winrate: number;
+    profit_factor: number;
+}
+
+export type PlaybookDetailedResponse = PlaybookResponse & {stats: PlaybookStats};
 
 export function toPlaybookResponse(playbook: Playbooks): PlaybookResponse {
     return {

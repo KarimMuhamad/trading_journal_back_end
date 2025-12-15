@@ -25,5 +25,6 @@ export class PlaybookValidation {
         name: z.string().min(1).optional(),
         page: z.number().min(1).positive(),
         size: z.number().min(1).max(50).positive(),
-    })
+        view: z.enum(['basic', 'detailed']).optional()
+    });
 }
