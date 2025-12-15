@@ -17,6 +17,12 @@ export type UpdatePlaybookRequest = {
     description?: string;
 }
 
+export type GetAllPlaybooksRequest = {
+    name?: string;
+    page: number;
+    size: number;
+}
+
 export function toPlaybookResponse(playbook: Playbooks): PlaybookResponse {
     return {
         id: playbook.id,
