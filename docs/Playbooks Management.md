@@ -71,10 +71,17 @@ Response 401 — Unauthorized
 - Endpoint: `/playbooks`
 - Authorization: `Bearer <accessToken>`
 
-Response 200 — Success
+Query Params
+- `page` (optional): page number (default: 1)
+- `size` (optional): number of items per page (default: 5)
+- `search` (optional): search query
+-  `view`: `detailed` | `basic` (default: `basic`)
+
+Response 200 (`basic`) — Success
 ```json
 {
   "status": "success",
+  "message": "Playbooks retrieved successfully.",
   "data": [
     {
       "id": 123,
@@ -87,6 +94,41 @@ Response 200 — Success
       "description": "A sample playbook for extreme order block strategy 2."
     }
   ]
+}
+```
+
+Response 200 (`detailed`) - Success
+```json
+{
+  "status": "success",
+  "message": "Playbooks retrieved successfully.",
+  "data": [
+    {
+      "id": 123,
+      "name": "Extreme Order Block",
+      "description": "A sample playbook for extreme order block strategy.",
+      "stats": {
+        "total_trades": 100,
+        "winrate": "56%",
+        "profit_factor": 2.3
+      }
+    },
+    {
+      "id": 456,
+      "name": "Extreme Order Block 2",
+      "description": "A sample playbook for extreme order block strategy 2.",
+      "stats": {
+        "total_trades": 100,
+        "winrate": "56%",
+        "profit_factor": 2.3
+      }
+    }
+  ],
+  "pagination": {
+    "total": 5,
+    "current": 1,
+    "size": 5
+  }
 }
 ```
 
