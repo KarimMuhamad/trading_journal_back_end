@@ -1,10 +1,17 @@
 import prisma from "../application/database";
-import { CreatePlaybookRequest, PlaybookResponse, toPlaybookResponse, UpdatePlaybookRequest } from "../model/playbook_model";
+import {
+    CreatePlaybookRequest,
+    GetAllPlaybooksRequest,
+    PlaybookResponse,
+    toPlaybookResponse,
+    UpdatePlaybookRequest
+} from "../model/playbook_model";
 import { PlaybookValidation } from "../validation/playbook_validation";
 import { Validation } from "../validation/validation";
 import { User } from "../../prisma/generated/client";
 import { ErrorResponse } from "../error/error_response";
 import { ErrorCode } from "../error/error-code";
+import {Pageable} from "../model/page";
 
 export class PlaybookService {
     static async createPlaybook(user: User, req: CreatePlaybookRequest): Promise<PlaybookResponse> {
@@ -48,5 +55,13 @@ export class PlaybookService {
         });
 
         return toPlaybookResponse(result);
+    }
+
+    static async getAllPlaybookSimple(user: User): Promise<PlaybookResponse[]> {
+        const playbooks = await prisma.playbooks.findMany({
+            where: {user_id: user.id},
+            orderBy: {created_at: 'desc'}
+        });
+        return playbooks.map(playbook => toPlaybookResponse(playbook));
     }
 }

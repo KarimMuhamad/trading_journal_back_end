@@ -3,7 +3,7 @@ import { Playbooks } from "../../prisma/generated/client";
 export type PlaybookResponse = {
     id: string;
     name: string;
-    description: string;
+    description: string | null;
 }
 
 export type CreatePlaybookRequest = {
@@ -17,7 +17,7 @@ export type UpdatePlaybookRequest = {
     description?: string;
 }
 
-export type GetAllPlaybooksRequest = {
+export type GetAllPlaybookDetailRequest = {
     name?: string;
     page: number;
     size: number;
@@ -36,6 +36,6 @@ export function toPlaybookResponse(playbook: Playbooks): PlaybookResponse {
     return {
         id: playbook.id,
         name: playbook.name,
-        description: playbook.description || "",
+        description: playbook.description ?? "",
     }
 }
