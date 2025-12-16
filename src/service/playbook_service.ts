@@ -135,4 +135,15 @@ export class PlaybookService {
         }
 
     }
+
+    static async delete(user: User, playbook_id: string) : Promise<PlaybookResponse> {
+        const validateReq = Validation.validate(UuidValidator.UUIDVALIDATOR, playbook_id);
+        await this.findPlaybookById(user.id, validateReq);
+
+        const result = await prisma.playbooks.delete({
+            where: {id: validateReq}
+        });
+
+        return toPlaybookResponse(result);
+    }
 }

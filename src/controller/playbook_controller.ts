@@ -116,4 +116,23 @@ export class PlaybookController {
             next(e);
         }
     }
+
+    static async delete(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const playbookId = req.params.playbookId;
+            const response = await PlaybookService.delete(req.user!, playbookId);
+            res.status(200).json({
+                status: "success",
+                message: "Playbook deleted successfully",
+                data: response
+            });
+            logger.info("Delete Playbook success", response);
+        } catch (e: any) {
+            logger.warn("Delete Playbook failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
 }
