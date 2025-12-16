@@ -129,7 +129,7 @@ export class PlaybookService {
             paging: {
                 page: validateReq.page,
                 size: validateReq.size,
-                total: total
+                total: Math.ceil(total / validateReq.size)
             }
         }
 

@@ -7,6 +7,8 @@ import logger from "../src/application/logger";
 import prisma from "../src/application/database";
 import {generateRandomOTP} from "../src/utils/generateRandomOTP";
 import {ApiTestHelper} from "./utils/api_helper";
+import {expect} from "@jest/globals";
+import {TradeResult} from "../prisma/generated/enums";
 
 describe('POST ' + buildUrl('/playbooks'), () => {
     let accessToken: string;
@@ -189,6 +191,158 @@ describe('GET ' + buildUrl('/playbooks'), () => {
 
     it('should be reject if access token invalid', async () => {
         const response = await supertest(web).get(buildUrl(`/playbooks/${playbook.id}`)).set('Authorization', 'Bearer ' + 'invalidAccessToken');
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+});
+
+describe('GET ' + buildUrl('/playbooks'), () => {
+    let accessToken: string;
+    let account: any;
+    let playbooks: any;
+
+    beforeEach(async () => {
+        const user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
+        account = await TestDBUtils.createAccount(user.id);
+
+        playbooks = [];
+
+        for (let i = 0; i <= 12; i++) {
+            const pb = await TestDBUtils.createPlaybook(user.id, `playbook ${i + 1}`, `description ${i + 1}`);
+            playbooks.push(pb);
+        }
+
+        accessToken = session.accessToken;
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to get all playbook basic view', async () => {
+        const response = await supertest(web).get(buildUrl('/playbooks')).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(Array.isArray(response.body.data)).toBe(true);
+        expect(response.body.data.length).toBe(4);
+    });
+
+    it('should be able to get all playbook explicit basic view', async () => {
+        const response = await supertest(web).get(buildUrl('/playbooks?view=basic')).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(Array.isArray(response.body.data)).toBe(true);
+        expect(response.body.data.length).toBe(4);
+    });
+
+    it('should be ignore random params in basic view', async () => {
+        const response = await supertest(web).get(buildUrl('/playbooks?page=1&size=1')).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(Array.isArray(response.body.data)).toBe(true);
+        expect(response.body.data.length).toBe(4);
+    });
+
+    it('should be able to get all playbook with detailed view and pagination', async () => {
+        const response = await supertest(web).get(buildUrl('/playbooks?view=detailed')).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(Array.isArray(response.body.data)).toBe(true);
+        expect(response.body.data.length).toBe(5);
+    });
+
+    it('should be able to get all playbook with detailed view and pagination page 2', async () => {
+        const response = await supertest(web).get(buildUrl('/playbooks?view=detailed&page=2')).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(Array.isArray(response.body.data)).toBe(true);
+    });
+
+    it('should be able to search playbooks', async () => {
+        const response = await supertest(web).get(buildUrl('/playbooks?view=detailed&search=playbook 4')).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(Array.isArray(response.body.data)).toBe(true);
+        expect(response.body.data.length).toBe(1);
+    });
+
+    it('should return correct statistics for detailed view', async () => {
+        // playbook 1 → 2 win, 1 loss
+        const trade = await Promise.all([
+            TestDBUtils.createTrade(account.id, 100, TradeResult.Win),
+            TestDBUtils.createTrade(account.id, 50, TradeResult.Win),
+            TestDBUtils.createTrade(account.id, -30, TradeResult.Lose),
+        ]);
+
+        for (const t of trade) {
+            await TestDBUtils.attachTradeToPlaybook(
+                playbooks[12].id,
+                t.id
+            );
+        }
+
+        // playbook 2 → 1 loss
+        const tradePb2 = await TestDBUtils.createTrade(
+            account.id,
+            -40,
+            TradeResult.Lose
+        );
+
+        await TestDBUtils.attachTradeToPlaybook(
+            playbooks[1].id,
+            tradePb2.id
+        );
+
+        // call API
+        const res = await supertest(web)
+            .get(buildUrl('/playbooks?view=detailed'))
+            .set('Authorization', `Bearer ${accessToken}`);
+
+        logger.info(res.body);
+        expect(res.status).toBe(200);
+
+        const pb1 = res.body.data.find(
+            (p: any) => p.id === playbooks[0].id
+        );
+
+        expect(pb1.stats.total_trades).toBe(3);
+        expect(pb1.stats.winrate).toBeCloseTo(66.66, 1);
+        expect(pb1.stats.profit_factor).toBeCloseTo(5, 1);
+
+        const pb2 = res.body.data.find(
+            (p: any) => p.id === playbooks[1].id
+        );
+
+        expect(pb2.stats.total_trades).toBe(1);
+        expect(pb2.stats.winrate).toBe(0);
+    });
+
+
+    it('should be reject if token invalid', async () => {
+        const response = await supertest(web).get(buildUrl('/playbooks?view=detailed&search=playbook 4')).set('Authorization', 'Bearer ' + 'wrongToken');
 
         logger.info(response.body);
 
