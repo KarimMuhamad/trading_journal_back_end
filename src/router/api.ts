@@ -26,3 +26,4 @@ apiRouter.post('/playbooks', PlaybookController.createPlaybook);
 apiRouter.patch('/playbooks/:playbookId', PlaybookController.updatePlaybook);
 apiRouter.get('/playbooks/:playbookId', PlaybookController.getPlayBookById);
 apiRouter.get('/playbooks', PlaybookController.getAllPlaybooks);
+apiRouter.delete('/playbooks/:playbookId', PlaybookController.delete);

@@ -1,9 +1,7 @@
 import {TradeResult} from "../../prisma/generated/enums";
+import {PlaybookStats} from "../model/playbook_model";
 
-export function calculatePlaybooksStats(trades: {
-    trade_result: TradeResult;
-    pnl: number
-}[]) {
+export function calculatePlaybooksStats(trades: Array<{trade_result: TradeResult, pnl: number}>) : PlaybookStats {
     const total = trades.length;
 
     let win = 0;
@@ -18,7 +16,7 @@ export function calculatePlaybooksStats(trades: {
 
     return {
         total_trades: total,
-        winrate: total === 0 ? 0 : ((win/total) * 100).toFixed(2),
-        profit_factor: grossLose === 0 ? 0 : (grossProfit / grossLose).toFixed(2)
+        winrate: total === 0 ? 0 : (win/total) * 100,
+        profit_factor: grossLose === 0 ? 0 : grossProfit / grossLose
     }
 }
