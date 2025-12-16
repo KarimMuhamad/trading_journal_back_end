@@ -1,5 +1,6 @@
 import prisma from "../../src/application/database";
 import argon2 from "argon2";
+import {TradeResult} from "../../prisma/generated/enums";
 
 export class TestDBUtils {
     static async cleanDB() {
@@ -14,4 +15,46 @@ export class TestDBUtils {
     static async createPlaybook(userId: string,name: string = "test playbook", description: string = "description test playbook") {
         return prisma.playbooks.create({data: {user_id: userId, name, description}});
     }
+
+    static async createAccount(
+        userId: string, nickname: string = "acc-test", exchange: string = "paper", balance: number = 1000, risk_per_trade: number = 1, max_risk_daily: number = 3
+    ) {
+        return prisma.accounts.create({
+            data: {
+                user_id: userId,
+                nickname,
+                exchange,
+                balance,
+                risk_per_trade,
+                max_risk_daily,
+            }
+        });
+    }
+
+    static async createTrade(accountId: string, pnl: number, trade_result : TradeResult) {
+        return prisma.trades.create({
+            data: {
+                account_id: accountId,
+                pair: "BTC/USDT",
+                position: "Long",
+                entry_price: 10000,
+                position_size: 1,
+                sl_price: 9000,
+                tp_price: 11000,
+                pnl,
+                trade_result,
+                status: "Closed",
+            }
+        });
+    }
+
+    static async attachTradeToPlaybook( playbookId: string, tradeId: string ) {
+        return prisma.tradePlaybooks.create({
+            data: {
+                playbook_id: playbookId,
+                trade_id: tradeId,
+            }
+        });
+    }
+
 }

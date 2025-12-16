@@ -1,10 +1,17 @@
 import prisma from "../application/database";
-import { CreatePlaybookRequest, PlaybookResponse, toPlaybookResponse, UpdatePlaybookRequest } from "../model/playbook_model";
+import {
+    CreatePlaybookRequest, GetAllPlaybookDetailRequest, PlaybookDetailedResponse,
+    PlaybookResponse,
+    toPlaybookResponse,
+    UpdatePlaybookRequest
+} from "../model/playbook_model";
 import { PlaybookValidation } from "../validation/playbook_validation";
 import { Validation } from "../validation/validation";
 import { User } from "../../prisma/generated/client";
 import { ErrorResponse } from "../error/error_response";
 import { ErrorCode } from "../error/error-code";
+import {Pageable} from "../model/page";
+import {calculatePlaybooksStats} from "../utils/calculatePlaybooksStats";
 
 export class PlaybookService {
     static async createPlaybook(user: User, req: CreatePlaybookRequest): Promise<PlaybookResponse> {
@@ -48,5 +55,83 @@ export class PlaybookService {
         });
 
         return toPlaybookResponse(result);
+    }
+
+    static async getAllPlaybookSimple(user: User): Promise<PlaybookResponse[]> {
+        const playbooks = await prisma.playbooks.findMany({
+            where: {user_id: user.id},
+            orderBy: {created_at: 'desc'}
+        });
+        return playbooks.map(playbook => toPlaybookResponse(playbook));
+    }
+
+    static async getAllPlaybookDetailed(user: User, req: GetAllPlaybookDetailRequest): Promise<Pageable<PlaybookDetailedResponse>> {
+        const validateReq = Validation.validate(PlaybookValidation.GETALLPLAYBOOK, req);
+
+        let where: any = {user_id: user.id};
+        if(validateReq.search) {
+            where = {...where,
+                OR: [
+                    {name: {contains: validateReq.search, mode: 'insensitive'}},
+                    {description: {contains: validateReq.search, mode: 'insensitive'}}
+                ]
+            };
+        }
+
+        const skip = (validateReq.page - 1) * validateReq.size;
+        const total = await prisma.playbooks.count({where: where});
+
+        const playbooks = await prisma.playbooks.findMany({
+            where: where,
+            skip: skip,
+            take: validateReq.size,
+            orderBy: {created_at: 'desc'}
+        });
+
+        const playbooksIds = playbooks.map(playbook => playbook.id);
+
+        const relations = await prisma.tradePlaybooks.findMany({
+            where: {playbook_id: {in: playbooksIds}},
+            select: {
+                playbook_id: true,
+                trade: {
+                    select: {
+                        trade_result: true,
+                        pnl: true
+                    }
+                }
+            }
+        });
+
+        const tradeMap = new Map<string, {trade_result: string; pnl: number}[]>();
+
+        for (const r of relations) {
+            if (!tradeMap.has(r.playbook_id)) {
+                tradeMap.set(r.playbook_id, []);
+            }
+            tradeMap.get(r.playbook_id)!.push({
+                trade_result: r.trade.trade_result,
+                pnl: r.trade.pnl.toNumber()
+            });
+        }
+
+        const data: PlaybookDetailedResponse[] = playbooks.map(pb => {
+            const trades = tradeMap.get(pb.id) ?? [];
+
+            return {
+                ...toPlaybookResponse(pb),
+                stats: calculatePlaybooksStats(trades)
+            }
+        });
+
+        return {
+            data,
+            paging: {
+                page: validateReq.page,
+                size: validateReq.size,
+                total: Math.ceil(total / validateReq.size)
+            }
+        }
+
     }
 }

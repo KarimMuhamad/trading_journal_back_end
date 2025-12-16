@@ -71,10 +71,17 @@ Response 401 — Unauthorized
 - Endpoint: `/playbooks`
 - Authorization: `Bearer <accessToken>`
 
-Response 200 — Success
+Query Params
+- `page` (optional): page number (default: 1)
+- `size` (optional): number of items per page (default: 5)
+- `search` (optional): search query
+- `view` (optional): `detailed` | `basic` (default: `basic`)
+
+Response 200 (`basic`) — Success
 ```json
 {
   "status": "success",
+  "message": "Playbooks retrieved successfully.",
   "data": [
     {
       "id": 123,
@@ -89,6 +96,48 @@ Response 200 — Success
   ]
 }
 ```
+
+Response 200 (`detailed`) - Success
+```json
+{
+  "status": "success",
+  "message": "Playbooks retrieved successfully.",
+  "data": [
+    {
+      "id": 123,
+      "name": "Extreme Order Block",
+      "description": "A sample playbook for extreme order block strategy.",
+      "stats": {
+        "total_trades": 100,
+        "winrate": 0.56,
+        "profit_factor": 2.3
+      }
+    },
+    {
+      "id": 456,
+      "name": "Extreme Order Block 2",
+      "description": "A sample playbook for extreme order block strategy 2.",
+      "stats": {
+        "total_trades": 100,
+        "winrate": 0.56,
+        "profit_factor": 2.3
+      }
+    }
+  ],
+  "paging": {
+    "page": 1,
+    "size": 5,
+    "total": 5
+  }
+}
+```
+
+Examples
+- Basic view (default):
+  - `GET /playbooks`
+  - `GET /playbooks?view=basic`
+- Detailed view with paging and search:
+  - `GET /playbooks?view=detailed&page=1&size=10&search=order`
 
 Response 401 — Unauthorized
 ```json

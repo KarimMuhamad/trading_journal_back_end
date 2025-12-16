@@ -25,3 +25,4 @@ apiRouter.patch('/users/email/verify-otp', UserController.verifyOTP);
 apiRouter.post('/playbooks', PlaybookController.createPlaybook);
 apiRouter.patch('/playbooks/:playbookId', PlaybookController.updatePlaybook);
 apiRouter.get('/playbooks/:playbookId', PlaybookController.getPlayBookById);
+apiRouter.get('/playbooks', PlaybookController.getAllPlaybooks);

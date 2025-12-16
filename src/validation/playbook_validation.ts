@@ -20,4 +20,11 @@ export class PlaybookValidation {
         /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
         "Invalid ID Format"
     );
+
+    static readonly GETALLPLAYBOOK: ZodType = z.object({
+        search: z.string().min(1).optional(),
+        page: z.number().min(1).positive().default(1),
+        size: z.number().min(1).max(50).positive().default(5),
+        view: z.enum(['basic', 'detailed']).optional()
+    });
 }
