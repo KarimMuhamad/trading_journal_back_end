@@ -75,7 +75,7 @@ Query Params
 - `page` (optional): page number (default: 1)
 - `size` (optional): number of items per page (default: 5)
 - `search` (optional): search query
--  `view`: `detailed` | `basic` (default: `basic`)
+- `view` (optional): `detailed` | `basic` (default: `basic`)
 
 Response 200 (`basic`) — Success
 ```json
@@ -109,7 +109,7 @@ Response 200 (`detailed`) - Success
       "description": "A sample playbook for extreme order block strategy.",
       "stats": {
         "total_trades": 100,
-        "winrate": "56%",
+        "winrate": 0.56,
         "profit_factor": 2.3
       }
     },
@@ -119,18 +119,25 @@ Response 200 (`detailed`) - Success
       "description": "A sample playbook for extreme order block strategy 2.",
       "stats": {
         "total_trades": 100,
-        "winrate": "56%",
+        "winrate": 0.56,
         "profit_factor": 2.3
       }
     }
   ],
-  "pagination": {
-    "total": 5,
-    "current": 1,
-    "size": 5
+  "paging": {
+    "page": 1,
+    "size": 5,
+    "total": 5
   }
 }
 ```
+
+Examples
+- Basic view (default):
+  - `GET /playbooks`
+  - `GET /playbooks?view=basic`
+- Detailed view with paging and search:
+  - `GET /playbooks?view=detailed&page=1&size=10&search=order`
 
 Response 401 — Unauthorized
 ```json

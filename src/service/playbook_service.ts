@@ -105,6 +105,16 @@ export class PlaybookService {
 
         const tradeMap = new Map<string, {trade_result: string; pnl: number}[]>();
 
+        for (const r of relations) {
+            if (!tradeMap.has(r.playbook_id)) {
+                tradeMap.set(r.playbook_id, []);
+            }
+            tradeMap.get(r.playbook_id)!.push({
+                trade_result: r.trade.trade_result,
+                pnl: r.trade.pnl.toNumber()
+            });
+        }
+
         const data: PlaybookDetailedResponse[] = playbooks.map(pb => {
             const trades = tradeMap.get(pb.id) ?? [];
 
