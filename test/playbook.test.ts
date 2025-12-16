@@ -342,3 +342,61 @@ describe('GET ' + buildUrl('/playbooks'), () => {
         expect(response.error).toBeDefined();
     });
 });
+
+describe('DELETE ' + buildUrl('/playbooks'), () => {
+    let accessToken: string;
+    let playbook: any;
+
+    beforeEach(async () => {
+        const user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
+        playbook = await TestDBUtils.createPlaybook(user.id);
+
+        accessToken = session.accessToken;
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to delete playbooks', async () => {
+        const response = await supertest(web).delete(buildUrl(`/playbooks/${playbook.id}`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.name).toBe(playbook.name);
+    });
+
+    it('should be reject if playbooks not found', async () => {
+        const cryptoUUID = crypto.randomUUID();
+        const response = await supertest(web).delete(buildUrl(`/playbooks/${cryptoUUID}`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(404);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject with validation UUID error', async () => {
+        const response = await supertest(web).delete(buildUrl(`/playbooks/test`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+        expect(response.body.errors).toBeDefined();
+    });
+
+    it('should be reject if access token invalid', async () => {
+        const response = await supertest(web).get(buildUrl(`/playbooks/${playbook.id}`)).set('Authorization', 'Bearer ' + 'invalidAccessToken');
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+});
