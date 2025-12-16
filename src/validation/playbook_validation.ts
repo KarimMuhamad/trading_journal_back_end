@@ -16,11 +16,6 @@ export class PlaybookValidation {
         description: z.string().optional(),
     });
 
-    static readonly UUIDVALIDATOR: ZodType = z.string().regex(
-        /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
-        "Invalid ID Format"
-    );
-
     static readonly GETALLPLAYBOOK: ZodType = z.object({
         search: z.string().min(1).optional(),
         page: z.number().min(1).positive().default(1),
