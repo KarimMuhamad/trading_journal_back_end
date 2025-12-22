@@ -8,11 +8,83 @@ Base URL: `/api.domain`
 ---
 
 # Table of Contents
-1. [Get Trade Detail](#1-get-trade-detail)
-2. [Close Running Trade](#2-close-running-trade)
+1. [Create New Trade Position](#1-create-new-trade-position)
+2. [Get Trade Detail](#2-get-trade-detail)
+3. [Close Running Trade](#3-close-running-trade)
 
 ---
-## 1. Get Trade Detail
+## 1. Create New Trade Position
+- Method: `POST`
+- Endpoint: `/trades/:accountId/trades`
+- Authorization: `Bearer <accessToken>`
+
+Request Body
+```json
+{
+  "entry_time": "2025-11-13T10:00:00Z",
+  "pair": "BTCUSDT",
+  "position": "LONG",
+  "entry_price": 68000.25,
+  "position_size": 0.5,
+  "sl_price": 67000.00,
+  "tp_price": 70000.00,
+  "note": "Breakout entry at resistance",
+  "link_img": "https://cdn.example.com/trades/chart1.png",
+  "playbook_ids": [1, 3]
+}
+```
+
+Response 201 — Success
+```json
+{
+  "status": "success",
+  "message": "Trade created successfully.",
+  "data": {
+    "id": 201,
+    "account_id": 12,
+    "pair": "BTCUSDT",
+    "position": "LONG",
+    "status": "Running",
+    "risk_reward": 2.0,
+    "playbooks": [
+      { "id": 1, "name": "Order Block" },
+      { "id": 3, "name": "Liquidity Sweep" }
+    ]
+  }
+}
+```
+
+Response 400 — Validation Error
+```json
+{
+  "status": "error",
+  "message": "Validation error",
+  "errors": [
+    { "field": "pair", "message": "Pair is required" }
+  ]
+}
+```
+
+Response 404 — Account Not Found
+```json
+{
+  "status": "error",
+  "message": "Account not found",
+  "code": "ACCOUNT_NOT_FOUND"
+}
+```
+
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+---
+
+## 2. Get Trade Detail
 - Method: `GET`
 - Endpoint: `/trades/:tradeId`
 - Authorization: `Bearer <accessToken>`
