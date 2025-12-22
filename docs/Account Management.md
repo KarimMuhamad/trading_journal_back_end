@@ -4,7 +4,7 @@ Backend: Node.js + Express + Prisma
 Auth: JWT (Access & Refresh Tokens)  
 Format: JSON  
 Version: 1.0.0
-Base URL: `/api.domain/v1`
+Base URL: `/api.domain`
 ---
 
 # Table of Contents
