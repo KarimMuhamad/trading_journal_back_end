@@ -20,10 +20,10 @@ model User {
   password           String    @db.VarChar(255)
   is_verified        Boolean   @default(false)
   timezone           String    @default("UTC") @db.VarChar(50)
-  created_at         DateTime  @default(now())
-  updated_at         DateTime  @updatedAt
-  deleted_at         DateTime?
-  deleted_expires_at DateTime?
+  created_at         DateTime  @db.Timestamptz() @default(now())
+  updated_at         DateTime  @db.Timestamptz() @updatedAt
+  deleted_at         DateTime? @db.Timestamptz()
+  deleted_expires_at DateTime? @db.Timestamptz()
 
   auth_session            auth_session[]
   emailVerifications      EmailVerification[]
@@ -46,10 +46,10 @@ model auth_session {
   ip_address  String    @db.VarChar(255)
   browser     String    @db.VarChar(50)
   os          String    @db.VarChar(50)
-  revoked_at  DateTime?
-  expires_at  DateTime
-  created_at  DateTime  @default(now())
-  updated_at  DateTime  @updatedAt
+  revoked_at  DateTime? @db.Timestamptz()
+  expires_at  DateTime  @db.Timestamptz()
+  created_at  DateTime  @db.Timestamptz() @default(now())
+  updated_at  DateTime  @db.Timestamptz() @updatedAt
   user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("auth_session")
@@ -59,9 +59,10 @@ model EmailVerification {
   id         String   @id @default(uuid(7)) @db.Uuid
   user_id    String   @db.Uuid
   token      String   @unique @db.VarChar(255)
-  expires_at DateTime
+  expires_at DateTime @db.Timestamptz()
   used       Boolean  @default(false)
-  created_at DateTime @default(now())
+  created_at DateTime @db.Timestamptz() @default(now())
+  updated_at DateTime @db.Timestamptz() @updatedAt
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("email_verifications")
@@ -71,8 +72,10 @@ model PasswordReset {
   id         String   @id @default(uuid(7)) @db.Uuid
   user_id    String   @db.Uuid
   token      String   @unique @db.VarChar(255)
-  expires_at DateTime
+  expires_at DateTime @db.Timestamptz()
   used       Boolean  @default(false)
+  created_at DateTime @db.Timestamptz() @default(now())
+  updated_at DateTime @db.Timestamptz() @updatedAt
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("password_resets")
@@ -82,10 +85,10 @@ model AccountRecoveryTokens {
   id         String   @id @default(uuid(7)) @db.Uuid
   user_id    String   @db.Uuid
   token      String   @unique @db.VarChar(255)
-  expires_at DateTime
+  expires_at DateTime @db.Timestamptz()
   used       Boolean  @default(false)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime @db.Timestamptz() @default(now())
+  updated_at DateTime @db.Timestamptz() @updatedAt
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@map("account_recovery_tokens")
@@ -97,9 +100,9 @@ model EmailChangeVerification {
   new_email  String   @db.VarChar(100)
   otp        String   @db.VarChar(6)
   used       Boolean  @default(false)
-  expires_at DateTime
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  expires_at DateTime @db.Timestamptz()
+  created_at DateTime @db.Timestamptz() @default(now())
+  updated_at DateTime @db.Timestamptz() @updatedAt
   user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id, otp])
@@ -115,8 +118,8 @@ model Accounts {
   risk_per_trade Decimal  @default(1.00)
   max_risk_daily Decimal  @default(3.00)
   is_archived    Boolean  @default(false)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  created_at     DateTime @db.Timestamptz() @default(now())
+  updated_at     DateTime @db.Timestamptz() @updatedAt
   user           User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   trades         Trades[]
 
@@ -129,8 +132,8 @@ model Playbooks {
   user_id         String           @db.Uuid
   name            String           @db.VarChar(255)
   description     String?          @db.Text
-  created_at      DateTime         @default(now())
-  updated_at      DateTime         @updatedAt
+  created_at      DateTime         @db.Timestamptz() @default(now())
+  updated_at      DateTime         @db.Timestamptz() @updatedAt
   user            User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
   trade_playbooks TradePlaybooks[]
 
@@ -163,8 +166,8 @@ model Trades {
   position_size   Decimal          @default(0)
   sl_price        Decimal          @default(0)
   tp_price        Decimal          @default(0)
-  entry_time      DateTime         @default(now())
-  exit_time       DateTime?
+  entry_time      DateTime         @db.Timestamptz()
+  exit_time       DateTime?        @db.Timestamptz()
   trade_duration  Int              @default(0)
   trade_result    TradeResult
   pnl             Decimal          @default(0)
@@ -173,8 +176,8 @@ model Trades {
   status          TradeStatus      @default(Running)
   notes           String?          @db.Text
   link_img        String?          @db.Text
-  created_at      DateTime         @default(now())
-  updated_at      DateTime         @updatedAt
+  created_at      DateTime         @db.Timestamptz() @default(now())
+  updated_at      DateTime         @db.Timestamptz() @updatedAt
   account         Accounts         @relation(fields: [account_id], references: [id], onDelete: Cascade)
   trade_playbooks TradePlaybooks[]
 
