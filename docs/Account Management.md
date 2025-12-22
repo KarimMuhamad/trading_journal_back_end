@@ -196,6 +196,10 @@ Response 401 — Unauthorized
 - Endpoint: `/accounts`
 - Authorization: `Bearer <accessToken>`
 
+Query Params:
+- `page`: Page number (default: 1)
+- `size`: Number of items per page (default: 5)
+
 Response 200 — Success
 ```json
 {
@@ -205,15 +209,34 @@ Response 200 — Success
       "id": 123,
       "nickName": "karimfx",
       "exchange": "Binance",
-      "balance": 1000
+      "balance": 1000,
+      "risk_per_trade": 1,
+      "max_risk_per_day": 3,
+      "stats": {
+        "total_trades": 20,
+        "total_profit": 100,
+        "total_loss": 150
+      }
     },
     {
       "id": 456,
       "nickName": "ahmedfx",
       "exchange": "Binance",
-      "balance": 2000
+      "balance": 2000,
+      "risk_per_trade": 1,
+      "max_risk_per_day": 3,
+      "stats": {
+        "total_trades": 20,
+        "total_profit": 100,
+        "total_loss": 150
+      }
     }
-  ]
+  ],
+  "paging": {
+    "page": 1,
+    "size": 5,
+    "total": 5
+  }
 }
 ```
 
@@ -319,6 +342,8 @@ Response 200 - Success
       "nickName": "karimfx",
       "exchange": "Binance",
       "balance": 1000,
+      "risk_per_trade": 1,
+      "max_risk_per_day": 3,
       "stats": {
         "total_trades": 20,
         "total_profit": 100,
@@ -330,6 +355,8 @@ Response 200 - Success
       "nickName": "ahmedfx",
       "exchange": "Binance",
       "balance": 2000,
+      "risk_per_trade": 1,
+      "max_risk_per_day": 3,
       "stats": {
         "total_trades": 20,
         "total_profit": 100,
