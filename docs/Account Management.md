@@ -13,8 +13,9 @@ Base URL: `/api.domain`
 3. [Update Account](#3-update-account)
 4. [Delete Account](#4-delete-account)
 5. [Get All Accounts](#5-get-all-accounts)
-6. [Create New Trade Position](#6-create-new-trade-position)
-7. [Get All Trades by Account](#7-get-all-trades-by-account)
+6. [Archive Account](#6-archive-account)
+7. [Unarchive Account](#7-unarchive-account)
+8. [Get All Archived Accounts](#8-get-all-archived-accounts)
 
 ---
 ## 1. Create Account
@@ -40,7 +41,9 @@ Response 201 — Success
     "id": 123,
     "nickName": "karimfx",
     "exchange": "Binance",
-    "balance": 1000
+    "balance": 1000,
+    "risk_per_trade": 1,
+    "max_risk_per_day": 3
   }
 }
 ```
@@ -158,6 +161,9 @@ Response 401 — Unauthorized
 - Endpoint: `/accounts/:id`
 - Authorization: `Bearer <accessToken>`
 
+Rules for deleting an account:
+- Account must not be `archived`.
+
 Response 200 — Success
 ```json
 {
@@ -219,61 +225,22 @@ Response 401 — Unauthorized
   "code": "AUTH_UNAUTHORIZED"
 }
 ```
-
 ---
-## 6. Create New Trade Position
-- Method: `POST`
-- Endpoint: `/accounts/:accountId/trades`
+
+## 6. Archive Account
+- Method: `DELETE`
+- Endpoint: `/accounts/:id/archive`
 - Authorization: `Bearer <accessToken>`
 
-Request Body
-```json
-{
-  "entry_time": "2025-11-13T10:00:00Z",
-  "pair": "BTCUSDT",
-  "position": "LONG",
-  "entry_price": 68000.25,
-  "position_size": 0.5,
-  "sl_price": 67000.00,
-  "tp_price": 70000.00,
-  "note": "Breakout entry at resistance",
-  "link_img": "https://cdn.example.com/trades/chart1.png",
-  "playbook_ids": [1, 3]
-}
-```
-
-Response 201 — Success
+Response 200 - Success
 ```json
 {
   "status": "success",
-  "message": "Trade created successfully.",
-  "data": {
-    "id": 201,
-    "account_id": 12,
-    "pair": "BTCUSDT",
-    "position": "LONG",
-    "status": "Running",
-    "risk_reward": 2.0,
-    "playbooks": [
-      { "id": 1, "name": "Order Block" },
-      { "id": 3, "name": "Liquidity Sweep" }
-    ]
-  }
+  "message": "Account archived successfully."
 }
 ```
 
-Response 400 — Validation Error
-```json
-{
-  "status": "error",
-  "message": "Validation error",
-  "errors": [
-    { "field": "pair", "message": "Pair is required" }
-  ]
-}
-```
-
-Response 404 — Account Not Found
+Response 404 - Not Found
 ```json
 {
   "status": "error",
@@ -282,7 +249,7 @@ Response 404 — Account Not Found
 }
 ```
 
-Response 401 — Unauthorized
+Response 401 - Unauthorized
 ```json
 {
   "status": "error",
@@ -290,50 +257,95 @@ Response 401 — Unauthorized
   "code": "AUTH_UNAUTHORIZED"
 }
 ```
-
 ---
-## 7. Get All Trades by Account
+
+## 7. Unarchive Account
+- Method: `PATCH`
+- Endpoint: `/accounts/:id/unarchive`
+- Authorization: `Bearer <accessToken>`
+- Note: Account must be archived.
+
+Response 200 - Success
+```json
+{ 
+  "status": "success",
+  "message": "Account unarchived successfuly",
+  "data": {
+    "id": 123,
+    "nickName": "karimfx",
+    "exchange": "Binance",
+    "balance": 1000,
+    "risk_per_trade": 1,
+    "max_risk_per_day": 3
+  }
+}
+```
+
+Response 404 - Not Found
+```json
+{
+  "status": "error",
+  "message": "Account not found",
+  "code": "ACCOUNT_NOT_FOUND"
+}
+```
+
+Response 401 - Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+---
+
+## 8. Get All Archived Accounts
 - Method: `GET`
-- Endpoint: `/accounts/:accountId/trades`
+- Endpoint: `/accounts/archived`
 - Authorization: `Bearer <accessToken>`
 
-Response 200 — Success
+Query Params:
+- `page`: Page number (default: 1)
+- `size`: Number of items per page (default: 5)
+
+Response 200 - Success
 ```json
 {
   "status": "success",
-  "account_id": 12,
   "data": [
     {
-      "id": 201,
-      "pair": "BTCUSDT",
-      "position": "LONG",
-      "entry_price": 68000.25,
-      "exit_price": 69500.00,
-      "realized_pnl": 749.88,
-      "status": "Closed",
-      "trade_result": "WIN"
+      "id": 123,
+      "nickName": "karimfx",
+      "exchange": "Binance",
+      "balance": 1000,
+      "stats": {
+        "total_trades": 20,
+        "total_profit": 100,
+        "total_loss": 150
+      }
     },
     {
-      "id": 202,
-      "pair": "ETHUSDT",
-      "position": "SHORT",
-      "entry_price": 3200.00,
-      "status": "Running"
+      "id": 456,
+      "nickName": "ahmedfx",
+      "exchange": "Binance",
+      "balance": 2000,
+      "stats": {
+        "total_trades": 20,
+        "total_profit": 100,
+        "total_loss": 150
+      }
     }
-  ]
+  ],
+  "paging": {
+    "page": 1,
+    "size": 5,
+    "total": 5
+  }
 }
 ```
 
-Response 404 — No Trades Found
-```json
-{
-  "status": "error",
-  "message": "No trades found for this account",
-  "code": "TRADES_NOT_FOUND"
-}
-```
-
-Response 401 — Unauthorized
+Response 401 - Unauthorized
 ```json
 {
   "status": "error",
@@ -341,10 +353,3 @@ Response 401 — Unauthorized
   "code": "AUTH_UNAUTHORIZED"
 }
 ```
-
-Query Parameters
-
-| Param    | Type   | Default | Example                             |
-| -------- | ------ | ------- | ----------------------------------- |
-| `status` | string | all     | `/accounts/12/trades?status=Closed` |
-| `limit`  | int    | 20      | `/accounts/12/trades?limit=10`      |
