@@ -3,6 +3,8 @@ import {AccountResponse, CreateAccountRequest, toAccountResponse} from "../model
 import {Validation} from "../validation/validation";
 import {AccountValidation} from "../validation/account_validation";
 import prisma from "../application/database";
+import {ErrorResponse} from "../error/error_response";
+import {UuidValidator} from "../validation/uuid_validator";
 
 export class AccountService {
     static async createAccount(user: User, req: CreateAccountRequest): Promise<AccountResponse> {
@@ -13,8 +15,17 @@ export class AccountService {
         return toAccountResponse(result);
     }
 
+    static async findAccountById(user_id: string, account_id: string){
+        const result = await prisma.accounts.findUnique({where: {id: account_id, user_id: user_id}});
+
+        if (!result) throw new ErrorResponse(404, "Account not found");
+
+        return result;
+    }
+
     static async getAccount(user: User, account_id: string): Promise<AccountResponse> {
-        const result = await prisma.accounts.findUnique({where: {id: account_id, user_id: user.id}});
+        const validateId = Validation.validate(UuidValidator.UUIDVALIDATOR, account_id);
+        const result = await prisma.accounts.findUnique({where: {id: validateId, user_id: user.id}});
         return toAccountResponse(result!);
     }
 }
