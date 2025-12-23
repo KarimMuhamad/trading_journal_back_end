@@ -1,6 +1,6 @@
 import prisma from "../../src/application/database";
 import argon2 from "argon2";
-import {TradeResult} from "../../prisma/generated/enums";
+import {TradeResult, TradeStatus} from "../../prisma/generated/enums";
 
 export class TestDBUtils {
     static async cleanDB() {
@@ -38,12 +38,13 @@ export class TestDBUtils {
                 pair: "BTC/USDT",
                 position: "Long",
                 entry_price: 10000,
-                position_size: 1,
+                entry_time: new Date(),
+                position_size: 0.01,
                 sl_price: 9000,
                 tp_price: 11000,
                 pnl,
                 trade_result,
-                status: "Closed",
+                status: TradeStatus.Closed,
             }
         });
     }
