@@ -3,6 +3,7 @@ import {authMiddleware} from "../middleware/auth_middleware";
 import {AuthController} from "../controller/auth_controller";
 import {UserController} from "../controller/user_controller";
 import { PlaybookController } from "../controller/playbook_controller";
+import {AccountController} from "../controller/account_controller";
 
 export const apiRouter = express.Router();
 
@@ -27,3 +28,6 @@ apiRouter.patch('/playbooks/:playbookId', PlaybookController.updatePlaybook);
 apiRouter.get('/playbooks/:playbookId', PlaybookController.getPlayBookById);
 apiRouter.get('/playbooks', PlaybookController.getAllPlaybooks);
 apiRouter.delete('/playbooks/:playbookId', PlaybookController.delete);
+
+// Account Endpoints
+apiRouter.post('/accounts', AccountController.createAccount);

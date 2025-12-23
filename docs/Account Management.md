@@ -28,7 +28,9 @@ Request Body
 {
   "nickName": "karimfx",
   "exchange": "Binance",
-  "balance": 1000
+  "balance": 1000,
+  "risk_per_trade": 0.1,
+  "max_risk_per_day": 0.3
 }
 ```
 

@@ -114,9 +114,9 @@ model Accounts {
   user_id        String   @db.Uuid
   nickname       String   @db.VarChar(255)
   exchange       String   @db.VarChar(50)
-  balance        Decimal  @default(0)
-  risk_per_trade Decimal  @default(1.00)
-  max_risk_daily Decimal  @default(3.00)
+  balance        Decimal  @db.Decimal(18,8)
+  risk_per_trade Decimal  @db.Decimal(5,4)
+  max_risk_daily Decimal  @db.Decimal(5,4)
   is_archived    Boolean  @default(false)
   created_at     DateTime @db.Timestamptz() @default(now())
   updated_at     DateTime @db.Timestamptz() @updatedAt
@@ -162,17 +162,17 @@ model Trades {
   account_id      String           @db.Uuid
   pair            String           @db.VarChar(50)
   position        PositionType
-  entry_price     Decimal          @default(0)
-  position_size   Decimal          @default(0)
-  sl_price        Decimal          @default(0)
-  tp_price        Decimal          @default(0)
+  entry_price     Decimal          @db.Decimal(18,8)
+  position_size   Decimal          @db.Decimal(18,8)
+  sl_price        Decimal?         @db.Decimal(18,8)
+  tp_price        Decimal?         @db.Decimal(18,8)
   entry_time      DateTime         @db.Timestamptz()
   exit_time       DateTime?        @db.Timestamptz()
-  trade_duration  Int              @default(0)
-  trade_result    TradeResult
-  pnl             Decimal          @default(0)
-  risk_reward     Decimal          @default(0)
-  rr_actual       Decimal          @default(0)
+  trade_duration  Int?
+  trade_result    TradeResult?
+  pnl             Decimal?         @db.Decimal(18,8)
+  risk_reward     Decimal?         @db.Decimal(5,2)
+  rr_actual       Decimal?         @db.Decimal(5,2)
   status          TradeStatus      @default(Running)
   notes           String?          @db.Text
   link_img        String?          @db.Text
