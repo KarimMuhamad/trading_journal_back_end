@@ -12,4 +12,9 @@ export class AccountService {
 
         return toAccountResponse(result);
     }
+
+    static async getAccount(user: User, account_id: string): Promise<AccountResponse> {
+        const result = await prisma.accounts.findUnique({where: {id: account_id, user_id: user.id}});
+        return toAccountResponse(result!);
+    }
 }

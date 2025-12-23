@@ -7,7 +7,7 @@ import {
 } from "../model/playbook_model";
 import { PlaybookValidation } from "../validation/playbook_validation";
 import { Validation } from "../validation/validation";
-import {TradeResult, User} from "../../prisma/generated/client";
+import {TradeResult, TradeStatus, User} from "../../prisma/generated/client";
 import { ErrorResponse } from "../error/error_response";
 import { ErrorCode } from "../error/error-code";
 import {Pageable} from "../model/page";
@@ -92,7 +92,12 @@ export class PlaybookService {
         const playbooksIds = playbooks.map(playbook => playbook.id);
 
         const relations = await prisma.tradePlaybooks.findMany({
-            where: {playbook_id: {in: playbooksIds}},
+            where: {
+                playbook_id: {in: playbooksIds},
+                trade: {
+                    status: {equals: TradeStatus.Closed},
+                }
+            },
             select: {
                 playbook_id: true,
                 trade: {
@@ -111,8 +116,8 @@ export class PlaybookService {
                 tradeMap.set(r.playbook_id, []);
             }
             tradeMap.get(r.playbook_id)!.push({
-                trade_result: r.trade.trade_result,
-                pnl: r.trade.pnl.toNumber()
+                trade_result: r.trade.trade_result!,
+                pnl: r.trade.pnl!.toNumber()
             });
         }
 
