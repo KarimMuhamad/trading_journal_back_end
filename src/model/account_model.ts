@@ -11,7 +11,6 @@ export type AccountResponse = {
 };
 
 export type CreateAccountRequest = {
-  user_id: string;
   nickname: string;
   exchange: string;
   balance: number;
