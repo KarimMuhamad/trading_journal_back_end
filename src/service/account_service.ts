@@ -23,9 +23,9 @@ export class AccountService {
         return result;
     }
 
-    static async getAccount(user: User, account_id: string): Promise<AccountResponse> {
+    static async getAccountById(user: User, account_id: string): Promise<AccountResponse> {
         const validateId = Validation.validate(UuidValidator.UUIDVALIDATOR, account_id);
-        const result = await prisma.accounts.findUnique({where: {id: validateId, user_id: user.id}});
+        const result = await this.findAccountById(user.id, validateId);
         return toAccountResponse(result!);
     }
 }
