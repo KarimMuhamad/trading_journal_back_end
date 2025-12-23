@@ -17,7 +17,7 @@ export class TestDBUtils {
     }
 
     static async createAccount(
-        userId: string, nickname: string = "acc-test", exchange: string = "paper", balance: number = 1000, risk_per_trade: number = 1, max_risk_daily: number = 3
+        userId: string, nickname: string = "acc-test", exchange: string = "paper", balance: number = 1000, risk_per_trade: number = 0.1, max_risk_daily: number = 0.3
     ) {
         return prisma.accounts.create({
             data: {

@@ -5,6 +5,7 @@ import {AccountValidation} from "../validation/account_validation";
 import prisma from "../application/database";
 import {ErrorResponse} from "../error/error_response";
 import {UuidValidator} from "../validation/uuid_validator";
+import {ErrorCode} from "../error/error-code";
 
 export class AccountService {
     static async createAccount(user: User, req: CreateAccountRequest): Promise<AccountResponse> {
@@ -18,7 +19,7 @@ export class AccountService {
     static async findAccountById(user_id: string, account_id: string){
         const result = await prisma.accounts.findUnique({where: {id: account_id, user_id: user_id}});
 
-        if (!result) throw new ErrorResponse(404, "Account not found");
+        if (!result) throw new ErrorResponse(404, "Account not found", ErrorCode.ACCOUNT_NOT_FOUND);
 
         return result;
     }

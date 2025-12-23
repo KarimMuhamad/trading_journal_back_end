@@ -148,3 +148,60 @@ describe('PRISMA EXTENSION is_archived filtering on accounts table', () => {
         expect(account!.nickname).toBe('test4');
     });
 });
+
+describe('GET' + buildUrl('/accounts'), () => {
+    let accessToken: string;
+    let user: any;
+    let account: any;
+
+    beforeEach(async () => {
+        user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        account = await TestDBUtils.createAccount(user.id);
+        const session = await ApiTestHelper.createSession('test', 'test123456');
+        accessToken = session.accessToken;
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to get acc by id', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts/${account.id}`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.nickname).toBe(account.nickname);
+    });
+
+    it('should be reject not found error', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts/${crypto.randomUUID()}`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(404);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject with validation error', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts/wrongID`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject with unauthorized', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts/${account.id}`)).set('Authorization', 'Bearer ' + 'wrongToken');
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+})
