@@ -38,4 +38,13 @@ export class AccountService {
         const result = await prisma.accounts.update({where: {id: validateReq.id}, data: validateReq});
         return toAccountResponse(result);
     }
+
+    static async deleteAccount(user: User, account_id: string) : Promise<AccountResponse> {
+        const validateId = Validation.validate(UuidValidator.UUIDVALIDATOR, account_id);
+
+        await this.findAccountById(user.id, validateId);
+
+        const result = await prisma.accounts.delete({where: {id: validateId}});
+        return toAccountResponse(result);
+    }
 }
