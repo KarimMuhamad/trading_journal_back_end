@@ -27,6 +27,14 @@ export type UpdateAccountRequest = {
   max_risk_daily?: number;
 };
 
+export type AccountStats = {
+  total_trades: number;
+  total_profit: number;
+  total_lose: number;
+}
+
+export type AccountDetailedResponse = AccountResponse & {stats: AccountStats};
+
 export function toAccountResponse(account: Accounts): AccountResponse {
   return {
     id: account.id,

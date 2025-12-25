@@ -18,5 +18,10 @@ export class AccountValidation {
         balance: DecimalValidator.BALANCE.optional(),
         risk_per_trade: DecimalValidator.PERCENTAGE.optional(),
         max_risk_daily: DecimalValidator.PERCENTAGE.optional()
-    })
+    });
+
+    static readonly GETALLACCOUNT: ZodType = z.object({
+        page: z.number().min(1).positive().default(1),
+        size: z.number().min(1).max(50).positive().default(5),
+    });
 }
