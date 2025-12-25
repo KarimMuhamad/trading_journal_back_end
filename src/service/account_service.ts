@@ -1,10 +1,10 @@
 import {User} from "../../prisma/generated/client";
-import {AccountResponse, CreateAccountRequest, toAccountResponse} from "../model/account_model";
+import {AccountResponse, CreateAccountRequest, toAccountResponse, UpdateAccountRequest} from "../model/account_model";
 import {Validation} from "../validation/validation";
 import {AccountValidation} from "../validation/account_validation";
 import prisma from "../application/database";
 import {ErrorResponse} from "../error/error_response";
-import {UuidValidator} from "../validation/uuid_validator";
+import {UuidValidator} from "../validation/helpers/uuid_validator";
 import {ErrorCode} from "../error/error-code";
 
 export class AccountService {
@@ -28,5 +28,14 @@ export class AccountService {
         const validateId = Validation.validate(UuidValidator.UUIDVALIDATOR, account_id);
         const result = await this.findAccountById(user.id, validateId);
         return toAccountResponse(result!);
+    }
+
+    static async updateAccount(user: User, req: UpdateAccountRequest) : Promise<AccountResponse> {
+        const validateReq = Validation.validate(AccountValidation.UPDATE, req);
+
+        await this.findAccountById(user.id, validateReq.id);
+
+        const result = await prisma.accounts.update({where: {id: validateReq.id}, data: validateReq});
+        return toAccountResponse(result);
     }
 }
