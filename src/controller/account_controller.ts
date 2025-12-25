@@ -62,4 +62,23 @@ export class AccountController {
             next(e);
         }
     }
+
+    static async deleteAccount(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const accountId = req.params.accountId;
+            const response = await AccountService.deleteAccount(req.user!, accountId);
+            res.status(200).json({
+                status: "success",
+                message: "Account deleted successfully",
+                data: response
+            });
+            logger.info("Delete Account success", response);
+        } catch (e: any) {
+            logger.warn("Delete Account failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
 }
