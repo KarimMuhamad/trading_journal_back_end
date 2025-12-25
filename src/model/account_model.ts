@@ -27,11 +27,16 @@ export type UpdateAccountRequest = {
   max_risk_daily?: number;
 };
 
+export type GetAllAccountDetailRequest = {
+  page: number;
+  size: number;
+};
+
 export type AccountStats = {
   total_trades: number;
   total_profit: number;
   total_lose: number;
-}
+};
 
 export type AccountDetailedResponse = AccountResponse & {stats: AccountStats};
 
