@@ -205,3 +205,70 @@ describe('GET' + buildUrl('/accounts'), () => {
         expect(response.error).toBeDefined();
     });
 })
+
+describe('PATCH' + buildUrl('/accounts'), () => {
+    let accessToken: string;
+    let user: any;
+    let account: any;
+
+    beforeEach(async () => {
+        user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        account = await TestDBUtils.createAccount(user.id);
+        const session = await ApiTestHelper.createSession('test', 'test123456');
+        accessToken = session.accessToken;
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to update account', async () => {
+        const response = await supertest(web).patch(buildUrl(`/accounts/${account.id}`)).set('Authorization', 'Bearer ' + accessToken).send({
+            nickname: 'test update account',
+            balance: 500,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.nickname).toBe('test update account');
+    });
+
+    it('should be reject with validation errors', async () => {
+        const response = await supertest(web).patch(buildUrl(`/accounts/${account.id}`)).set('Authorization', 'Bearer ' + accessToken).send({
+            nickname: '',
+            exchange: 'okx',
+            balance: -500,
+            risk_per_trade: 1.2,
+            max_risk_daily: 0.6
+        });
+    });
+
+    it('should be reject with account not found ', async () => {
+        const randomUUID = crypto.randomUUID();
+        const response = await supertest(web).patch(buildUrl(`/accounts/${randomUUID}`)).set('Authorization', 'Bearer ' + accessToken).send({
+            nickname: 'test update account',
+            balance: 500,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(404);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject with access token invalid', async () => {
+        const response = await supertest(web).patch(buildUrl(`/accounts/${account.id}`)).set('Authorization', 'Bearer ' + 'salah').send({
+            nickname: 'test update account',
+            balance: 500,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+});
