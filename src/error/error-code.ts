@@ -31,6 +31,7 @@ export enum ErrorCode {
 
     // Account Management Errors
     ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND",
+    ACCOUNT_NOT_ARCHIVED = "ACCOUNT_NOT_ARCHIVED",
 
     // Trade Errors
     TRADE_NOT_FOUND = "TRADE_NOT_FOUND",

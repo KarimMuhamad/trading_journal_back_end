@@ -42,7 +42,12 @@ export class AccountService {
     static async deleteAccount(user: User, account_id: string) : Promise<AccountResponse> {
         const validateId = Validation.validate(UuidValidator.UUIDVALIDATOR, account_id);
 
-        await this.findAccountById(user.id, validateId);
+        const account = await prisma.accounts.findUnique({
+            where: {id: validateId, user_id: user.id, includeArchived: true} as any
+        });
+
+        if (!account) throw new ErrorResponse(404, "Account not found", ErrorCode.ACCOUNT_NOT_FOUND);
+        if (!account.is_archived) throw new ErrorResponse(400, "Archived Account First", ErrorCode.ACCOUNT_NOT_ARCHIVED);
 
         const result = await prisma.accounts.delete({where: {id: validateId}});
         return toAccountResponse(result);
