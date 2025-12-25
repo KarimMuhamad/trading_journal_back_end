@@ -33,3 +33,4 @@ apiRouter.delete('/playbooks/:playbookId', PlaybookController.delete);
 apiRouter.post('/accounts', AccountController.createAccount);
 apiRouter.get('/accounts/:accountId', AccountController.getAccountById);
 apiRouter.patch('/accounts/:accountId', AccountController.updateAccount);
+apiRouter.delete('/accounts/:accountId', AccountController.deleteAccount);
