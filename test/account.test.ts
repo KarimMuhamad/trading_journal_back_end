@@ -7,6 +7,7 @@ import {web} from "../src/application/web";
 import logger from "../src/application/logger";
 import {expect} from "@jest/globals";
 import prisma from "../src/application/database";
+import {TradeResult} from "../prisma/generated/enums";
 
 describe('POST ' + buildUrl('/accounts'), () => {
     let accessToken: string;
@@ -343,5 +344,72 @@ describe('DELETE' + buildUrl('/accounts'), () => {
         expect(response.status).toBe(401);
         expect(response.body.status).toBe('error');
         expect(response.error).toBeDefined();
+    });
+})
+
+describe('GET' + buildUrl('/accounts'), () => {
+    let accessToken: string;
+    let user: any;
+    let account: any;
+
+    beforeEach(async () => {
+        user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        account = await TestDBUtils.createAccount(user.id);
+        await TestDBUtils.createAccount(user.id);
+        await TestDBUtils.createAccount(user.id);
+        await TestDBUtils.createAccount(user.id);
+        const session = await ApiTestHelper.createSession('test', 'test123456');
+        accessToken = session.accessToken;
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to getAllAccount', async () => {
+        await TestDBUtils.createTrade(account.id, 12, TradeResult.Win);
+        await TestDBUtils.createTrade(account.id, -12, TradeResult.Lose);
+        await TestDBUtils.createTrade(account.id, -8.7, TradeResult.Lose);
+        await TestDBUtils.createTrade(account.id, -11.55, TradeResult.Lose);
+        await TestDBUtils.createTrade(account.id, 22, TradeResult.Win);
+        await TestDBUtils.createTrade(account.id, 35, TradeResult.Win);
+        await TestDBUtils.createTrade(account.id, 24.89, TradeResult.Win);
+        await TestDBUtils.createTrade(account.id, 31.77, TradeResult.Win);
+
+        const response = await supertest(web).get(buildUrl(`/accounts`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.length).toBe(4);
+    });
+
+    it('should be able to pagination', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts?size=2&page=2`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.length).toBe(2);
+    });
+
+    it('should be reject with validation error', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts?size=wrong&page=wrong`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be reject with credential error', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts`)).set('Authorization', 'Bearer ' + 'salah');
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
     });
 })
