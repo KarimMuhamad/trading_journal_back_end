@@ -18,6 +18,15 @@ export type CreateAccountRequest = {
   max_risk_daily: number;
 };
 
+export type UpdateAccountRequest = {
+  id: string;
+  nickname?: string;
+  exchange?: string;
+  balance?: number;
+  risk_per_trade?: number;
+  max_risk_daily?: number;
+};
+
 export function toAccountResponse(account: Accounts): AccountResponse {
   return {
     id: account.id,

@@ -12,7 +12,7 @@ import { ErrorResponse } from "../error/error_response";
 import { ErrorCode } from "../error/error-code";
 import {Pageable} from "../model/page";
 import {calculatePlaybooksStats} from "../utils/calculatePlaybooksStats";
-import {UuidValidator} from "../validation/uuid_validator";
+import {UuidValidator} from "../validation/helpers/uuid_validator";
 
 export class PlaybookService {
     static async createPlaybook(user: User, req: CreatePlaybookRequest): Promise<PlaybookResponse> {

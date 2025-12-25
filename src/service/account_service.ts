@@ -4,7 +4,7 @@ import {Validation} from "../validation/validation";
 import {AccountValidation} from "../validation/account_validation";
 import prisma from "../application/database";
 import {ErrorResponse} from "../error/error_response";
-import {UuidValidator} from "../validation/uuid_validator";
+import {UuidValidator} from "../validation/helpers/uuid_validator";
 import {ErrorCode} from "../error/error-code";
 
 export class AccountService {

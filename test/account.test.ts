@@ -42,8 +42,8 @@ describe('POST ' + buildUrl('/accounts'), () => {
         const response = await supertest(web).post(buildUrl('/accounts')).set('Authorization', 'Bearer ' + accessToken).send({
             nickname: 'test account',
             exchange: 'binance',
-            balance: -1000.12,
-            risk_per_trade: 3.1,
+            balance: -1110.23,
+            risk_per_trade: 0.0000424,
             max_risk_daily: 1.3
         });
 

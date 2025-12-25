@@ -1,5 +1,6 @@
 import {z, ZodType } from "zod";
 import { id } from "zod/v4/locales";
+import {UuidValidator} from "./helpers/uuid_validator";
 
 export class PlaybookValidation {
     static readonly CREATEPLAYBOOK: ZodType = z.object({
@@ -8,10 +9,7 @@ export class PlaybookValidation {
     });
 
     static readonly UPDATEPLAYBOOK: ZodType = z.object({
-        id: z.string().regex(
-            /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/,
-            "Invalid ID Format"
-        ),
+        id: UuidValidator.UUIDVALIDATOR,
         name: z.string().min(1).max(100).optional(),
         description: z.string().optional(),
     });

@@ -44,8 +44,8 @@ Response 201 — Success
     "nickName": "karimfx",
     "exchange": "Binance",
     "balance": 1000,
-    "risk_per_trade": 1,
-    "max_risk_per_day": 3
+    "risk_per_trade": 0.1,
+    "max_risk_per_day": 0.3
   }
 }
 ```
@@ -300,8 +300,8 @@ Response 200 - Success
     "nickName": "karimfx",
     "exchange": "Binance",
     "balance": 1000,
-    "risk_per_trade": 1,
-    "max_risk_per_day": 3
+    "risk_per_trade": 0.1,
+    "max_risk_per_day": 0.3
   }
 }
 ```
