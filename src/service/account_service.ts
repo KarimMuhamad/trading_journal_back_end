@@ -94,4 +94,13 @@ export class AccountService {
             }
         }
     }
+
+    static async archiveAccount(user: User, account_id: string) : Promise<AccountResponse> {
+        const validateId = Validation.validate(UuidValidator.UUIDVALIDATOR, account_id);
+        await this.findAccountById(user.id, validateId);
+
+        const result = await prisma.accounts.update({where: {id: validateId}, data: {is_archived: true}});
+
+        return toAccountResponse(result);
+    }
 }
