@@ -413,3 +413,63 @@ describe('GET' + buildUrl('/accounts'), () => {
         expect(response.body.status).toBe('error');
     });
 })
+
+describe('PATCH' + buildUrl('/accounts/:accountId/archive'), () => {
+    let accessToken: string;
+    let user: any;
+    let account: any;
+
+    beforeEach(async () => {
+        user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        account = await TestDBUtils.createAccount(user.id);
+        const session = await ApiTestHelper.createSession('test', 'test123456');
+        accessToken = session.accessToken;
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should should be able to archive account', async () => {
+        const response = await supertest(web).patch(buildUrl(`/accounts/${account.id}/archive`)).set('Authorization', 'Bearer ' + accessToken);
+
+        const accountAfterArchive = await prisma.accounts.findUnique({ where: { id: account.id, includeArchived: true } as any });
+        expect(accountAfterArchive!.is_archived).toBe(true);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be reject with validation error', async () => {
+        const response = await supertest(web).patch(buildUrl(`/accounts/wrongID/archive`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject if account not found', async () => {
+        const randomUUID = crypto.randomUUID();
+        const response = await supertest(web).patch(buildUrl(`/accounts/${randomUUID}/archive`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(404);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+
+    it('should be reject if credentials was invalid', async () => {
+        const response = await supertest(web).patch(buildUrl(`/accounts/${account.id}/archive`)).set('Authorization', 'Bearer ' + 'salah');
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+        expect(response.error).toBeDefined();
+    });
+})
