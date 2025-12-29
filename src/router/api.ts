@@ -35,3 +35,4 @@ apiRouter.get('/accounts/:accountId', AccountController.getAccountById);
 apiRouter.patch('/accounts/:accountId', AccountController.updateAccount);
 apiRouter.delete('/accounts/:accountId', AccountController.deleteAccount);
 apiRouter.get('/accounts', AccountController.getAllAccount);
+apiRouter.patch('/accounts/:accountId/archive', AccountController.archiveAccount);

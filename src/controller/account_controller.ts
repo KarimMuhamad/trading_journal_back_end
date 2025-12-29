@@ -111,4 +111,23 @@ export class AccountController {
             next(e);
         }
     }
+
+    static async archiveAccount(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const accountId = req.params.accountId;
+            const response = await AccountService.archiveAccount(req.user!, accountId);
+            res.status(200).json({
+                status: "success",
+                message: "Account archived successfully",
+                data: response
+            });
+            logger.info("Archive Account success", response);
+        } catch (e: any) {
+            logger.warn("Archive Account failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
 }
