@@ -1,8 +1,9 @@
-import {Accounts, TradeStatus, User} from "../../prisma/generated/client";
+import {User} from "../../prisma/generated/client";
 import {
     AccountDetailedResponse,
     AccountResponse,
-    CreateAccountRequest, GetAllAccountDetailRequest,
+    CreateAccountRequest,
+    GetAllAccountDetailRequest,
     toAccountResponse,
     UpdateAccountRequest
 } from "../model/account_model";
@@ -101,6 +102,18 @@ export class AccountService {
 
         const result = await prisma.accounts.update({where: {id: validateId}, data: {is_archived: true}});
 
+        return toAccountResponse(result);
+    }
+
+    static async unarchiveAccount(user: User, account_id: string) : Promise<AccountResponse> {
+        const validateId = Validation.validate(UuidValidator.UUIDVALIDATOR, account_id);
+
+        const account = await prisma.accounts.findUnique({where: {id: validateId, user_id: user.id, includeArchived: true} as any});
+
+        if(!account) throw new ErrorResponse(404, "Account Not Found", ErrorCode.ACCOUNT_NOT_FOUND);
+        if(!account.is_archived) throw new ErrorResponse(400, "Account Not Archived", ErrorCode.ACCOUNT_NOT_ARCHIVED);
+
+        const result = await prisma.accounts.update({where: {id: validateId}, data: {is_archived: false}});
         return toAccountResponse(result);
     }
 }
