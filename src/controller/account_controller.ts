@@ -1,7 +1,7 @@
 import {AuthUserRequest} from "../types/auth_type";
 import {Response, NextFunction} from "express";
 import logger from "../application/logger";
-import {CreateAccountRequest, GetAllAccountDetailRequest, UpdateAccountRequest} from "../model/account_model";
+import {CreateAccountRequest, GetPaginationRequest, UpdateAccountRequest} from "../model/account_model";
 import {AccountService} from "../service/account_service";
 
 export class AccountController {
@@ -84,7 +84,7 @@ export class AccountController {
 
     static async getAllAccount(req: AuthUserRequest, res: Response, next: NextFunction) {
         try {
-            const request: GetAllAccountDetailRequest = {
+            const request: GetPaginationRequest = {
                 page: Number(req.query.page ?? 1),
                 size: Number(req.query.size ?? 5),
             }
@@ -143,6 +143,36 @@ export class AccountController {
             logger.info("Unarchive Account success", response);
         } catch (e: any) {
             logger.warn("Unarchive Account failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
+
+    static async getAllArchivedAccount(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const request: GetPaginationRequest = {
+                page: Number(req.query.page ?? 1),
+                size: Number(req.query.size ?? 5),
+            }
+
+            const response = await AccountService.getAllArchiveAccount(req.user!, request);
+
+            res.status(200).json({
+                status: "success",
+                message: "Accounts Archived fetched successfully",
+                data: response.data,
+                paging: response.paging,
+            });
+
+            logger.info("Get All Account success",
+                {
+                    userId: req.user!.id,
+                }
+            )
+        } catch (e: any) {
+            logger.warn("Get All Account Archived failed", {
                 message: e.message,
                 status: e.status,
             });

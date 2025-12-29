@@ -27,7 +27,7 @@ export type UpdateAccountRequest = {
   max_risk_daily?: number;
 };
 
-export type GetAllAccountDetailRequest = {
+export type GetPaginationRequest = {
   page: number;
   size: number;
 };
