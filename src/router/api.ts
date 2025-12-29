@@ -31,10 +31,10 @@ apiRouter.delete('/playbooks/:playbookId', PlaybookController.delete);
 
 // Account Endpoints
 apiRouter.post('/accounts', AccountController.createAccount);
+apiRouter.get('/accounts/archived', AccountController.getAllArchivedAccount);
 apiRouter.get('/accounts/:accountId', AccountController.getAccountById);
 apiRouter.patch('/accounts/:accountId', AccountController.updateAccount);
 apiRouter.delete('/accounts/:accountId', AccountController.deleteAccount);
 apiRouter.get('/accounts', AccountController.getAllAccount);
 apiRouter.patch('/accounts/:accountId/archive', AccountController.archiveAccount);
 apiRouter.patch('/accounts/:accountId/unarchive', AccountController.unarchiveAccount);
-apiRouter.get('accounts/archived', AccountController.getAllArchivedAccount);

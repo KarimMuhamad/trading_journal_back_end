@@ -161,7 +161,7 @@ export class AccountController {
 
             res.status(200).json({
                 status: "success",
-                message: "Accounts fetched successfully",
+                message: "Accounts Archived fetched successfully",
                 data: response.data,
                 paging: response.paging,
             });
@@ -172,7 +172,7 @@ export class AccountController {
                 }
             )
         } catch (e: any) {
-            logger.warn("Get All Account failed", {
+            logger.warn("Get All Account Archived failed", {
                 message: e.message,
                 status: e.status,
             });

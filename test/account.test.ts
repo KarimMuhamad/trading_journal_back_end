@@ -77,11 +77,11 @@ describe('PRISMA EXTENSION is_archived filtering on accounts table', () => {
     let user: any;
     beforeEach(async () => {
         user = await TestDBUtils.createUser();
-        await TestDBUtils.createAccount(user.id, 'test1', 'binance', 1000, 0.1, 0.3);
-        await TestDBUtils.createAccount(user.id, 'test2', 'binance', 1000, 0.1, 0.3);
-        await TestDBUtils.createAccount(user.id, 'test3', 'binance', 1000, 0.1, 0.3);
-        await TestDBUtils.createAccount(user.id, 'test4', 'binance', 1000, 0.1, 0.3);
-        await TestDBUtils.createAccount(user.id, 'test5', 'binance', 1000, 0.1, 0.3);
+        await TestDBUtils.createAccount(user.id);
+        await TestDBUtils.createAccount(user.id);
+        await TestDBUtils.createAccount(user.id);
+        await TestDBUtils.createAccount(user.id);
+        await TestDBUtils.createAccount(user.id);
     });
 
     afterEach(async () => {
@@ -552,3 +552,70 @@ describe('PATCH' + buildUrl('/accounts/:accountId/unarchive'), () => {
         expect(response.error).toBeDefined();
     });
 })
+
+describe('GET' + buildUrl('/accounts/archived'), () => {
+    let accessToken: string;
+    let user: any;
+    let account: any;
+
+    beforeEach(async () => {
+        user = await TestDBUtils.createUser('test', 'test@dev.com', 'test123456');
+        account = await TestDBUtils.createAccount(user.id, true);
+        await TestDBUtils.createAccount(user.id, true);
+        await TestDBUtils.createAccount(user.id, true);
+        await TestDBUtils.createAccount(user.id, true);
+        await TestDBUtils.createAccount(user.id, false, 'test not archived');
+        const session = await ApiTestHelper.createSession('test', 'test123456');
+        accessToken = session.accessToken;
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to getAllAccountArchived', async () => {
+        console.log(account.id);
+        await TestDBUtils.createTrade(account.id, 12, TradeResult.Win);
+        await TestDBUtils.createTrade(account.id, -12, TradeResult.Lose);
+        await TestDBUtils.createTrade(account.id, -8.7, TradeResult.Lose);
+        await TestDBUtils.createTrade(account.id, -11.55, TradeResult.Lose);
+        await TestDBUtils.createTrade(account.id, 22, TradeResult.Win);
+        await TestDBUtils.createTrade(account.id, 35, TradeResult.Win);
+        await TestDBUtils.createTrade(account.id, 24.89, TradeResult.Win);
+        await TestDBUtils.createTrade(account.id, 31.77, TradeResult.Win);
+
+        const response = await supertest(web).get(buildUrl(`/accounts/archived`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be able to pagination', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts/archived?size=2&page=2`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be reject with validation error', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts/archived?size=wrong&page=wrong`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be reject with credential error', async () => {
+        const response = await supertest(web).get(buildUrl(`/accounts/archived`)).set('Authorization', 'Bearer ' + 'salah');
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+    });
+});
