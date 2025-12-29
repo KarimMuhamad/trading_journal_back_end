@@ -3,7 +3,7 @@ import {
     AccountDetailedResponse,
     AccountResponse,
     CreateAccountRequest,
-    GetAllAccountDetailRequest,
+    GetPaginationRequest,
     toAccountResponse,
     UpdateAccountRequest
 } from "../model/account_model";
@@ -62,7 +62,7 @@ export class AccountService {
     }
 
 
-    static async getAllAccount(user: User, req: GetAllAccountDetailRequest) : Promise<Pageable<AccountDetailedResponse>> {
+    static async getAllAccount(user: User, req: GetPaginationRequest) : Promise<Pageable<AccountDetailedResponse>> {
         const validateReq = Validation.validate(AccountValidation.GETALLACCOUNT, req);
 
         const skip = (validateReq.page - 1) * validateReq.size;
@@ -115,5 +115,39 @@ export class AccountService {
 
         const result = await prisma.accounts.update({where: {id: validateId}, data: {is_archived: false}});
         return toAccountResponse(result);
+    }
+
+    static async getAllArchiveAccount(user: User, req: GetPaginationRequest) : Promise<Pageable<AccountDetailedResponse>> {
+        const validateReq = Validation.validate(AccountValidation.GETALLACCOUNT, req);
+
+        const skip = (validateReq.page - 1) * validateReq.size;
+
+        const [result, total] = await Promise.all([
+            prisma.$queryRaw<any[]>`
+                SELECT a.id, a.user_id, a.nickname, a.exchange, a.balance, a.risk_per_trade, a.max_risk_daily,
+                   COUNT(t.id)::int as total_trades, COALESCE(SUM(CASE WHEN t.pnl > 0 THEN t.pnl ELSE 0 END), 0) as total_profit,
+                   COALESCE(SUM(CASE WHEN t.pnl < 0 THEN t.pnl ELSE 0 END), 0) as total_lose FROM accounts a LEFT JOIN trades t ON t.account_id = a.id
+                WHERE a.user_id = ${user.id}::Uuid AND is_archived = TRUE GROUP BY a.id ORDER BY a.created_at DESC LIMIT ${validateReq.size} OFFSET ${skip}
+            `,
+            prisma.accounts.count({where: {user_id: user.id}})
+        ]);
+
+        const data: AccountDetailedResponse[] = result.map(acc => ({
+            ...toAccountResponse(acc),
+            stats: {
+                total_trades: acc.total_trades,
+                total_profit: acc.total_profit,
+                total_lose: acc.total_lose
+            }
+        }));
+
+        return {
+            data: data,
+            paging: {
+                page: validateReq.page,
+                size: validateReq.size,
+                total: Math.ceil(total / validateReq.size)
+            }
+        }
     }
 }

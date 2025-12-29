@@ -1,7 +1,7 @@
 import {AuthUserRequest} from "../types/auth_type";
 import {Response, NextFunction} from "express";
 import logger from "../application/logger";
-import {CreateAccountRequest, GetAllAccountDetailRequest, UpdateAccountRequest} from "../model/account_model";
+import {CreateAccountRequest, GetPaginationRequest, UpdateAccountRequest} from "../model/account_model";
 import {AccountService} from "../service/account_service";
 
 export class AccountController {
@@ -84,7 +84,7 @@ export class AccountController {
 
     static async getAllAccount(req: AuthUserRequest, res: Response, next: NextFunction) {
         try {
-            const request: GetAllAccountDetailRequest = {
+            const request: GetPaginationRequest = {
                 page: Number(req.query.page ?? 1),
                 size: Number(req.query.size ?? 5),
             }
