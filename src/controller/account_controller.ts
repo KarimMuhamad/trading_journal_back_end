@@ -130,4 +130,23 @@ export class AccountController {
             next(e);
         }
     }
+
+    static async unarchiveAccount(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const accountId = req.params.accountId;
+            const response = await AccountService.unarchiveAccount(req.user!, accountId);
+            res.status(200).json({
+                status: "success",
+                message: "Account unarchived successfully",
+                data: response
+            });
+            logger.info("Unarchive Account success", response);
+        } catch (e: any) {
+            logger.warn("Unarchive Account failed", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
 }
