@@ -15,8 +15,21 @@ Base URL: `/api.domain`
 ---
 ## 1. Create New Trade Position
 - Method: `POST`
-- Endpoint: `/trades/:accountId/trades`
+- Endpoint: `/accounts/:accountId/trades`
 - Authorization: `Bearer <accessToken>`
+
+**Optional Values**
+- sl_price
+- tp_price
+- exit_price
+- trade_result
+- trade_duration
+- pnl
+- risk_reward
+- rr_actual
+- link_img
+- notes
+
 
 Request Body
 ```json
@@ -28,7 +41,6 @@ Request Body
   "position_size": 0.5,
   "sl_price": 67000.00,
   "tp_price": 70000.00,
-  "note": "Breakout entry at resistance",
   "link_img": "https://cdn.example.com/trades/chart1.png",
   "playbook_ids": [1, 3]
 }
@@ -42,9 +54,14 @@ Response 201 — Success
   "data": {
     "id": 201,
     "account_id": 12,
+    "entry_time": "<timestampz>",
     "pair": "BTCUSDT",
     "position": "LONG",
+    "entry_price": "<entry_price>",
+    "position_size": 0.5,
     "status": "Running",
+    "sl_price": "<sl_price>",
+    "tp_price": "<tp_price>",
     "risk_reward": 2.0,
     "playbooks": [
       { "id": 1, "name": "Order Block" },
@@ -101,7 +118,7 @@ Response 200 — Success
     "entry_price": 68000.25,
     "exit_price": 69500.00,
     "position_size": 0.5,
-    "realized_pnl": 749.88,
+    "pnl": 749.88,
     "risk_reward": 2.0,
     "rr_actual": 2.3,
     "trade_result": "WIN",
@@ -137,9 +154,9 @@ Response 401 — Unauthorized
 ```
 
 ---
-## 2. Close Running Trade
+## 3. Close Running Trade
 - Method: `PATCH`
-- Endpoint: `/trades/:tradeId`
+- Endpoint: `/trades/:tradeId/close`
 - Authorization: `Bearer <accessToken>`
 
 Request Body
@@ -163,11 +180,15 @@ Response 200 — Success
     "exit_price": 69500.00,
     "exit_time": "2025-11-13T14:30:00Z",
     "trade_duration": "6300s",
-    "realized_pnl": 749.88,
+    "pnl": 749.88,
     "risk_reward": 2.0,
     "rr_actual": 2.3,
     "trade_result": "WIN",
-    "status": "Closed"
+    "status": "Closed",
+    "playbooks": [
+      { "id": 1, "name": "Order Block" },
+      { "id": 3, "name": "Liquidity Sweep" }
+    ]
   }
 }
 ```
