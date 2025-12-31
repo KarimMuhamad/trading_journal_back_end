@@ -2,11 +2,10 @@ import { PositionType, TradeResult, TradeStatus } from "../../prisma/generated/e
 
 export type TradeResponse = {
     id: string,
+    account_id: string,
     pair: string,
     position: PositionType,
-    entryPrice: number,
-    exitPrice: number | null,
-    positionSize: number,
+    position_size: number,
     entry_price: number,
     exit_price: number | null,
     exit_time: Date | null,
@@ -19,10 +18,22 @@ export type TradeResponse = {
     rr_actueal: number | null,
     trade_result: TradeResult | null,
     status: TradeStatus,
-    playbooks: TradePlaybooks | null,  
+    playbooks: TradePlaybooks[] | null,  
 }
 
 export type TradePlaybooks = {
     id: string,
     name: string,
+}
+
+export type CreateTradeRequest = {
+    account_id: string,
+    entry_time: Date,
+    pair: string,
+    position: PositionType,
+    entryPrice: number,
+    positionSize: number,
+    tp_price?: number | null,
+    sl_price?: number | null,
+    playbook_id?: string[] | null,
 }
