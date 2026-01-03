@@ -4,6 +4,7 @@ import {AuthController} from "../controller/auth_controller";
 import {UserController} from "../controller/user_controller";
 import { PlaybookController } from "../controller/playbook_controller";
 import {AccountController} from "../controller/account_controller";
+import { TradeController } from "../controller/trade_controller";
 
 export const apiRouter = express.Router();
 
@@ -38,3 +39,6 @@ apiRouter.delete('/accounts/:accountId', AccountController.deleteAccount);
 apiRouter.get('/accounts', AccountController.getAllAccount);
 apiRouter.patch('/accounts/:accountId/archive', AccountController.archiveAccount);
 apiRouter.patch('/accounts/:accountId/unarchive', AccountController.unarchiveAccount);
+
+// Trade Endpoints
+apiRouter.post('/accounts/:accountId/trades', TradeController.executeTrade);
