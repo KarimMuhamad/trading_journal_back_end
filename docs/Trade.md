@@ -119,6 +119,8 @@ Response 200 — Success
     "exit_price": 69500.00,
     "position_size": 0.5,
     "pnl": 749.88,
+    "sl_price": <sl_price>,
+    "tp_price": <tp_price>,
     "risk_reward": 2.0,
     "rr_actual": 2.3,
     "trade_result": "WIN",
@@ -126,6 +128,7 @@ Response 200 — Success
     "note": "Closed manually at resistance.",
     "entry_time": "2025-11-13T10:00:00Z",
     "exit_time": "2025-11-13T14:30:00Z",
+    "trade_duration": 430s,
     "link_img": "https://cdn.example.com/trades/chart1.png",
     "playbooks": [
       { "id": 1, "name": "Order Block" },

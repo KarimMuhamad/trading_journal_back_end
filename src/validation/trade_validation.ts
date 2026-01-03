@@ -13,6 +13,6 @@ export class TradeValidation {
         position_size: DecimalValidator.SIZES,
         tp_price: DecimalValidator.PRICE.optional(),
         sl_price: DecimalValidator.PRICE.optional(),
-        playbook_id: z.array(UuidValidator.UUIDVALIDATOR).optional().nullable(),
+        playbook_id: z.array(UuidValidator.UUIDVALIDATOR).optional(),
     })      
 }
