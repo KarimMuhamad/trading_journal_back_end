@@ -164,6 +164,7 @@ model Trades {
   position        PositionType
   entry_price     Decimal          @db.Decimal(18,8)
   position_size   Decimal          @db.Decimal(18,8)
+  exit_price      Decimal?         @db.Decimal(18,8) 
   sl_price        Decimal?         @db.Decimal(18,8)
   tp_price        Decimal?         @db.Decimal(18,8)
   entry_time      DateTime         @db.Timestamptz()
