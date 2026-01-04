@@ -42,3 +42,4 @@ apiRouter.patch('/accounts/:accountId/unarchive', AccountController.unarchiveAcc
 
 // Trade Endpoints
 apiRouter.post('/accounts/:accountId/trades', TradeController.executeTrade);
+apiRouter.get('/trades/:tradeId', TradeController.getTradeById);
