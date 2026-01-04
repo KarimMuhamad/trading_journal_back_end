@@ -7,12 +7,12 @@ export class TradeValidation {
     static readonly CREATE_TRADE: ZodType = z.object({
         account_id: UuidValidator.UUIDVALIDATOR,
         pair: z.string().min(3).max(50),
-        entry_time: z.date(),
+        entry_time: z.coerce.date(),
         position: z.enum(PositionType),
-        entryPrice: DecimalValidator.PRICE,
+        entry_price: DecimalValidator.PRICE,
         position_size: DecimalValidator.SIZES,
         tp_price: DecimalValidator.PRICE.optional(),
         sl_price: DecimalValidator.PRICE.optional(),
-        playbook_id: z.array(UuidValidator.UUIDVALIDATOR).optional(),
+        playbook_ids: z.array(UuidValidator.UUIDVALIDATOR).optional(),
     })      
 }
