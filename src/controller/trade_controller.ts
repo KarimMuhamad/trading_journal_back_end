@@ -26,4 +26,25 @@ export class TradeController {
             next(e);
         }
     }
+
+    static async getTradeById(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const trade_id = req.params.tradeId;
+            
+            const response = await TradeServices.getTradeById(req.user!, trade_id);
+            res.status(200).json({
+                status: "success",
+                message: "Successfuly fetched trade by id",
+                data: response,
+            });
+
+            logger.info("Get Trade By id Succes", response);
+        } catch(e: any) {
+            logger.warn("Failed to get trade by id", {
+                message: e.message,
+                status: e.status
+            });
+            next(e);
+        }
+    }
 }
