@@ -1,10 +1,13 @@
+import { assertEqual } from "zod/v4/core/util.cjs";
 import { User } from "../../prisma/generated/client";
 import prisma from "../application/database";
 import { ErrorCode } from "../error/error-code";
 import { ErrorResponse } from "../error/error_response";
 import { CreateTradeRequest, toTradeResponse, TradeResponse } from "../model/trade_model";
+import { UuidValidator } from "../validation/helpers/uuid_validator";
 import { TradeValidation } from "../validation/trade_validation";
 import { Validation } from "../validation/validation";
+import { id } from "zod/v4/locales";
 
 export class TradeServices {
     static async executeTrade(user: User, req: CreateTradeRequest) : Promise<TradeResponse> {
@@ -57,5 +60,31 @@ export class TradeServices {
         });
 
         return toTradeResponse(trade);
+    }
+
+    static async getTradeById(user: User, trade_id: string) : Promise<TradeResponse> {
+        const validateID = Validation.validate(UuidValidator.UUIDVALIDATOR, trade_id);
+
+        const result = await prisma.trades.findFirst({
+            where: {
+                id: validateID,
+                account: {
+                    user_id: user.id,
+                }
+            },
+            include: {
+                trade_playbooks: {
+                    include: {
+                        playbook: {
+                            select: {id: true, name: true}
+                        }
+                    }
+                }
+            }
+        });
+
+        if(!result) throw new ErrorResponse(404, "Trade not found", ErrorCode.TRADE_NOT_FOUND);
+
+        return toTradeResponse(result);
     }
 }
