@@ -3,6 +3,7 @@ import prisma from "../application/database";
 import { ErrorCode } from "../error/error-code";
 import { ErrorResponse } from "../error/error_response";
 import { CreateTradeRequest, toTradeResponse, TradeResponse } from "../model/trade_model";
+import { calculateRiskAmount, calculateRiskReward } from "../utils/calculateRR";
 import { UuidValidator } from "../validation/helpers/uuid_validator";
 import { TradeValidation } from "../validation/trade_validation";
 import { Validation } from "../validation/validation";
@@ -30,6 +31,11 @@ export class TradeServices {
                 }
             };
 
+            // Calculate Risk Reward
+            const risk_reward = calculateRiskReward(validateReq.entry_price, validateReq.sl_price ?? null, validateReq.entry_price ?? null);
+            
+            // Calculate Risk Amount
+            const risk_amount = calculateRiskAmount(validateReq.entry_price, validateReq.sl_price ?? null, validateReq.position_size);
             
             return await tx.trades.create({
                 data: {
@@ -40,6 +46,8 @@ export class TradeServices {
                     position_size: validateReq.position_size,
                     tp_price: validateReq.tp_price ?? null,
                     sl_price: validateReq.sl_price ?? null,
+                    risk_reward: risk_reward,
+                    risk_amount: risk_amount,
                     entry_time: validateReq.entry_time,
                     trade_playbooks : {
                         create: validateReq.playbook_ids.map(id => ({
