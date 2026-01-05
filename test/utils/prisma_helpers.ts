@@ -2,6 +2,7 @@ import prisma from "../../src/application/database";
 import argon2 from "argon2";
 import {PositionType, TradeResult, TradeStatus} from "../../prisma/generated/enums";
 import { Prisma } from "../../prisma/generated/client";
+import {faker} from "@faker-js/faker/locale/en";
 
 export class TestDBUtils {
     static async cleanDB() {
@@ -37,7 +38,7 @@ export class TestDBUtils {
         account: {
             connect: {id: accountId},
         },
-        pair: "BTC/USDT",
+        pair: faker.helpers.arrayElement(["BTC", "ETH", "SOL", "XRP", "BNB", "DOT"]),
         position: PositionType.Long,
         entry_price: 10000,
         entry_time: new Date(),
