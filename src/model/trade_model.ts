@@ -40,6 +40,13 @@ export type CreateTradeRequest = {
     playbook_ids: string[],
 }
 
+export type CloseRunningTradeRequest = {
+    trade_id: string,
+    exit_price: number,
+    exit_time: Date,
+    pnl: number,
+}
+
 export function toTradeResponse(trade: Trades & { trade_playbooks : {playbook: TradePlaybooksRelation}[]} ) : TradeResponse {
     return {
         id: trade.id,
