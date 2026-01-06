@@ -27,6 +27,10 @@ export class TradeFactory {
         }
     }
 
+    private static randomPosition(): PositionType {
+        return faker.helpers.arrayElement([PositionType.Long, PositionType.Short]);
+    }
+
     static base(accountId: string, position: PositionType = PositionType.Long) : Prisma.TradesCreateInput {
         const prices = this.generatePrices(position);
 
@@ -55,6 +59,38 @@ export class TradeFactory {
                 ...override
             }
         });
+    }
+
+    static async createBatch(accountId: string, count: number, options?: {status?: TradeStatus; seed?: number}) {
+        if(options?.seed !== undefined) {
+            faker.seed(options.seed);
+        }
+
+        return Promise.all(
+            Array.from({length: count}).map(() => {
+                const position = this.randomPosition();
+
+                return this.create(accountId, {
+                    position,
+                    status: options?.status ?? TradeStatus.Running
+                });
+            })
+        );
+    }
+
+    static async createBatchWithPlaybook(accountId: string, playbookId: string, count: number, options: {}) {
+        const trades = await this.createBatch(accountId, count, options);
+
+        await Promise.all(
+            trades.map(trd => prisma.tradePlaybooks.create({
+                data: {
+                    trade_id: trd.id,
+                    playbook_id: playbookId,
+                }
+            }))
+        )
+
+        return trades;
     }
 
 }
