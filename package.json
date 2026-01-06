@@ -11,8 +11,11 @@
   },
   "jest": {
     "transform": {
-      "^.+\\.[t|j]sx?$": "babel-jest"
-    }
+      "^.+\\.(t|j)sx?$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "node_modules/(?!@faker-js/faker)"
+    ]
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",

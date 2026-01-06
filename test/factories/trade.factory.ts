@@ -1,4 +1,4 @@
-import { faker } from "@faker-js/faker/locale/en";
+import { faker } from "@faker-js/faker";
 import { PositionType, TradeStatus } from "../../prisma/generated/enums";
 import { Prisma } from "../../prisma/generated/client";
 import prisma from "../../src/application/database";

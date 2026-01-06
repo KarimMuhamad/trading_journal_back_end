@@ -1,8 +1,5 @@
 import prisma from "../../src/application/database";
 import argon2 from "argon2";
-import {PositionType, TradeResult, TradeStatus} from "../../prisma/generated/enums";
-import { Prisma } from "../../prisma/generated/client";
-import {faker} from "@faker-js/faker/locale/en";
 
 export class TestDBUtils {
     static async cleanDB() {
@@ -30,32 +27,6 @@ export class TestDBUtils {
                 risk_per_trade,
                 max_risk_daily,
                 is_archived,
-            }
-        });
-    }
-
-    static defaultTrade = (accountId: string) : Prisma.TradesCreateInput => ({
-        account: {
-            connect: {id: accountId},
-        },
-        pair: faker.helpers.arrayElement(["BTC", "ETH", "SOL", "XRP", "BNB", "DOT"]),
-        position: PositionType.Long,
-        entry_price: 10000,
-        entry_time: new Date(),
-        position_size: 0.01,
-        sl_price: 9000,
-        tp_price: 11000,
-        status: TradeStatus.Running,
-    })
-
-    static async createTrade(accountId: string, override: Partial<Prisma.TradesCreateInput> = {}) {
-        const isClosed = override.status === TradeStatus.Closed;
-
-        return prisma.trades.create({
-            data: {
-                ...TestDBUtils.defaultTrade(accountId),
-                ...(isClosed && {exit_time: new Date()}),
-                ...override,
             }
         });
     }
