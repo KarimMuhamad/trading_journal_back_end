@@ -1,12 +1,13 @@
-import { User } from "../../prisma/generated/client";
+import { calculateRiskAmount, calculateRiskReward } from "../utils/calculateRR";
+import { TradeStatus, User } from "../../prisma/generated/client";
 import prisma from "../application/database";
 import { ErrorCode } from "../error/error-code";
 import { ErrorResponse } from "../error/error_response";
-import { CreateTradeRequest, toTradeResponse, TradeResponse } from "../model/trade_model";
-import { calculateRiskAmount, calculateRiskReward } from "../utils/calculateRR";
+import { CloseRunningTradeRequest, CreateTradeRequest, toTradeResponse, TradeResponse } from "../model/trade_model";
 import { UuidValidator } from "../validation/helpers/uuid_validator";
 import { TradeValidation } from "../validation/trade_validation";
 import { Validation } from "../validation/validation";
+import { calculateRiskRewardActual, calculateTradeDuration, resultClassification } from "../utils/closeTradeCalculate";
 
 export class TradeServices {
     static async executeTrade(user: User, req: CreateTradeRequest) : Promise<TradeResponse> {
@@ -90,6 +91,60 @@ export class TradeServices {
         });
 
         if(!result) throw new ErrorResponse(404, "Trade not found", ErrorCode.TRADE_NOT_FOUND);
+
+        return toTradeResponse(result);
+    }
+    
+    static async closeTrade(user: User, req: CloseRunningTradeRequest) : Promise<TradeResponse> {
+        const validateReq = Validation.validate(TradeValidation.CLOSE_TRADE, req);
+
+        const trade = await prisma.trades.findUnique({
+            where: {
+                id: validateReq.trade_id,
+                account: {
+                    user_id: user.id,
+                }
+            },
+        });
+
+        if(!trade) throw new ErrorResponse(404, "Trade not Found", ErrorCode.TRADE_NOT_FOUND);
+
+        if(trade.status !== TradeStatus.Running) throw new ErrorResponse(400, "Trade Already Closed");
+        
+        if(validateReq.exit_time < trade.entry_time) throw new ErrorResponse(400, "Exit time cannot be before entry time");
+
+        // Trade Duration Calculation
+        const trade_duration = calculateTradeDuration(trade.entry_time, trade.entry_time);         
+
+        // Risk Reward Actual Calculation
+        const rr_actual = calculateRiskRewardActual(validateReq.pnl, trade.risk_amount?.toNumber() ?? null);
+
+        // Trade Result Classification
+        const trade_result = resultClassification(validateReq.pnl, rr_actual);
+
+        const result = await prisma.trades.update({
+            where: {
+                id: validateReq.trade_id,
+                account: {
+                    user_id: user.id,
+                }
+            },
+            data: {
+                ...validateReq,
+                trade_duration,
+                rr_actual,
+                trade_result,
+            },
+            include: {
+                trade_playbooks: {
+                    include: {
+                        playbook: {
+                            select: {id: true, name: true}
+                        }
+                    }
+                }
+            }
+        });
 
         return toTradeResponse(result);
     }
