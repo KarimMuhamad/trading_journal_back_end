@@ -5,7 +5,8 @@ import { ApiTestHelper } from "./utils/api_helper";
 import supertest from "supertest";
 import { web } from "../src/application/web";
 import logger from "../src/application/logger";
-import { PositionType } from '../prisma/generated/enums';
+import { PositionType, TradeStatus } from '../prisma/generated/enums';
+import { TradeFactory } from './factories/trade.factory';
 
 describe('POST ' + buildUrl('/accounts/:accountId/trades'), () => {
     let accessToken: string;
@@ -169,7 +170,9 @@ describe('GET ' + buildUrl('/trades/:tradeId'), () => {
 
         account = await TestDBUtils.createAccount(user.id, false);
         playbookGlobal  = await TestDBUtils.createPlaybook(user.id, "OB Extreme", "Testing OB");
-        trade = await TestDBUtils.createTrade(account.id);
+        trade = await TradeFactory.create(account.id, {
+            position: PositionType.Short,
+        })
         await TestDBUtils.attachTradeToPlaybook(playbookGlobal.id, trade.id);
     });
 

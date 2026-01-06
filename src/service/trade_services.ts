@@ -1,4 +1,3 @@
-import { assertEqual } from "zod/v4/core/util.cjs";
 import { User } from "../../prisma/generated/client";
 import prisma from "../application/database";
 import { ErrorCode } from "../error/error-code";
@@ -7,7 +6,6 @@ import { CreateTradeRequest, toTradeResponse, TradeResponse } from "../model/tra
 import { UuidValidator } from "../validation/helpers/uuid_validator";
 import { TradeValidation } from "../validation/trade_validation";
 import { Validation } from "../validation/validation";
-import { id } from "zod/v4/locales";
 
 export class TradeServices {
     static async executeTrade(user: User, req: CreateTradeRequest) : Promise<TradeResponse> {
