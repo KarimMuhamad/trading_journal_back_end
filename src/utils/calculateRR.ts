@@ -4,7 +4,7 @@ export function calculateRiskReward(entry_price: number, sl_price: number | null
     const risk = Math.abs(entry_price - sl_price);
     const reward = Math.abs(tp_price - entry_price);
     
-    const rr = risk / reward;
+    const rr = reward / risk;
 
     return rr;
 }

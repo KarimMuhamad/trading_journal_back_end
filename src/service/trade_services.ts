@@ -32,7 +32,7 @@ export class TradeServices {
             };
 
             // Calculate Risk Reward
-            const risk_reward = calculateRiskReward(validateReq.entry_price, validateReq.sl_price ?? null, validateReq.entry_price ?? null);
+            const risk_reward = calculateRiskReward(validateReq.entry_price, validateReq.sl_price ?? null, validateReq.tp_price ?? null);
             
             // Calculate Risk Amount
             const risk_amount = calculateRiskAmount(validateReq.entry_price, validateReq.sl_price ?? null, validateReq.position_size);
