@@ -32,10 +32,11 @@ describe('POST ' + buildUrl('/accounts/:accountId/trades'), () => {
             entry_time: new Date(),
             position: PositionType.Long, 
             pair: "BTC/USDT",
-            entry_price: 99.234,
-            position_size: 0.00213,
-            sl_price: 99.065,
-            playbook_ids: [playbookGlobal.id], 
+            entry_price: 99.123,
+            position_size: 0.3,
+            sl_price: 98.111,
+            tp_price: 125.888,
+            playbook_ids: [playbookGlobal.id],
         });
         
         logger.debug(response.body);

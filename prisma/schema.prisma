@@ -169,6 +169,7 @@ model Trades {
   tp_price        Decimal?         @db.Decimal(18,8)
   entry_time      DateTime         @db.Timestamptz()
   exit_time       DateTime?        @db.Timestamptz()
+  risk_amount     Decimal?         @db.Decimal(18,8) 
   trade_duration  Int?
   trade_result    TradeResult?
   pnl             Decimal?         @db.Decimal(18,8)
