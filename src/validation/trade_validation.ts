@@ -15,4 +15,11 @@ export class TradeValidation {
         sl_price: DecimalValidator.PRICE.optional(),
         playbook_ids: z.array(UuidValidator.UUIDVALIDATOR).optional(),
     })      
+
+    static readonly CLOSE_TRADE: ZodType = z.object({
+        trade_id: UuidValidator.UUIDVALIDATOR,
+        exit_price: DecimalValidator.PRICE,
+        exit_time: z.coerce.date(),
+        pnl: DecimalValidator.PRICE,
+    })
 }

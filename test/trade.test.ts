@@ -7,6 +7,7 @@ import { web } from "../src/application/web";
 import logger from "../src/application/logger";
 import { PositionType, TradeStatus } from '../prisma/generated/enums';
 import { TradeFactory } from './factories/trade.factory';
+import prisma from "../src/application/database";
 
 describe('POST ' + buildUrl('/accounts/:accountId/trades'), () => {
     let accessToken: string;
@@ -219,4 +220,126 @@ describe('GET ' + buildUrl('/trades/:tradeId'), () => {
         expect(response.body.status).toBe('error');
     });
 
+});
+
+describe('PATCH ' + buildUrl('/trades/:tradeId/close'), () => {
+    let accessToken: string;
+    let account: any;
+    let playbookGlobal: any;
+    let trade: any;
+    let user: any;
+    
+
+    beforeEach(async () => {
+        user = await TestDBUtils.createUser("test", "test@dev.com", "test123456");
+        const session = await ApiTestHelper.createSession("test", "test123456");
+        accessToken = session.accessToken;
+
+        account = await TestDBUtils.createAccount(user.id, false);
+        playbookGlobal  = await TestDBUtils.createPlaybook(user.id, "OB Extreme", "Testing OB");
+        trade = await TradeFactory.create(account.id);
+        await TestDBUtils.attachTradeToPlaybook(playbookGlobal.id, trade.id);
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to close trade', async () => {
+        const exit_price = trade.position === PositionType.Long ? trade.entry_price * 1.01 : trade.entry_price * 0.99;
+
+        const response = await supertest(web).patch(buildUrl(`/trades/${trade.id}/closed`)).set('Authorization', 'Bearer ' + accessToken).send({
+            exit_time: new Date(),
+            exit_price,
+            pnl: 100,
+        });
+
+        console.log(response.body);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.status).toBe(TradeStatus.Closed);
+    });
+
+    it('should be reject if trade was closed', async () => {
+        const exit_price = trade.position === PositionType.Long ? trade.entry_price * 1.01 : trade.entry_price * 0.99;
+
+        await prisma.trades.update({
+            where: { id: trade.id },
+            data: { status: TradeStatus.Closed }
+        });
+
+        const response = await supertest(web).patch(buildUrl(`/trades/${trade.id}/closed`)).set('Authorization', 'Bearer ' + accessToken).send({
+            exit_time: new Date(),
+            exit_price,
+            pnl: 100,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be reject if exit time lower than entry time', async () => {
+        const exit_price = trade.position === PositionType.Long ? trade.entry_price * 1.01 : trade.entry_price * 0.99;
+
+        const exit_time = new Date(trade.entry_time.getTime() - 1000);
+
+        const response = await supertest(web).patch(buildUrl(`/trades/${trade.id}/closed`)).set('Authorization', 'Bearer ' + accessToken).send({
+            exit_time,
+            exit_price,
+            pnl: 100,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be able to reject if trade id not found', async () => {
+        const randomUUID = crypto.randomUUID();
+
+        const response = await supertest(web).patch(buildUrl(`/trades/${randomUUID}/closed`)).set('Authorization', 'Bearer ' + accessToken).send({
+            exit_time: new Date(),
+            exit_price: 100,
+            pnl: 100,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(404);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be reject with validation error', async () => {
+        const response = await supertest(web).patch(buildUrl(`/trades/test/closed`)).set('Authorization', 'Bearer ' + accessToken).send({
+            exit_time: new Date(),
+            exit_price: 100,
+            pnl:"salah",
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be reject with invalid accessToken', async () => {
+        const exit_price = trade.position === PositionType.Long ? trade.entry_price * 1.01 : trade.entry_price * 0.99;
+
+        const response = await supertest(web).patch(buildUrl(`/trades/${trade.id}/closed`)).set('Authorization', 'Bearer ' + 'salah').send({
+            exit_time: new Date(),
+            exit_price,
+            pnl: 100,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+    });
 });
