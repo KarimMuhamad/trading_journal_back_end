@@ -19,7 +19,7 @@ export class TradeValidation {
     static readonly CLOSE_TRADE: ZodType = z.object({
         trade_id: UuidValidator.UUIDVALIDATOR,
         exit_price: DecimalValidator.PRICE,
-        exit_time: z.ceorce.date(),
+        exit_time: z.coerce.date(),
         pnl: DecimalValidator.PRICE,
     })
 }

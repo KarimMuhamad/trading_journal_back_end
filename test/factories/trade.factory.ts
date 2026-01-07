@@ -2,6 +2,7 @@ import { faker } from "@faker-js/faker";
 import { PositionType, TradeStatus } from "../../prisma/generated/enums";
 import { Prisma } from "../../prisma/generated/client";
 import prisma from "../../src/application/database";
+import {calculateRiskAmount, calculateRiskReward} from "../../src/utils/calculateRR";
 
 export class TradeFactory {
     
@@ -31,8 +32,11 @@ export class TradeFactory {
         return faker.helpers.arrayElement([PositionType.Long, PositionType.Short]);
     }
 
-    static base(accountId: string, position: PositionType = PositionType.Long) : Prisma.TradesCreateInput {
+    static base(accountId: string, position: PositionType = this.randomPosition()) : Prisma.TradesCreateInput {
         const prices = this.generatePrices(position);
+        const position_size = faker.number.float({min: 0.01, max: 1, fractionDigits: 3})
+        const risk_amount = calculateRiskAmount(prices.entry, prices.sl, position_size);
+        const risk_reward = calculateRiskReward(prices.entry, prices.sl, prices.tp);
 
         return {
             account: {connect: {id: accountId}},
@@ -41,7 +45,9 @@ export class TradeFactory {
             entry_price: prices.entry,
             sl_price: prices.sl,
             tp_price: prices.tp,
-            position_size: faker.number.float({min: 0.01, max: 1, fractionDigits: 3}),
+            risk_amount,
+            risk_reward,
+            position_size,
             entry_time: faker.date.recent({days: 3}),
             status: TradeStatus.Running,
         }

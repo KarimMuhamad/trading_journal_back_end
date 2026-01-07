@@ -30,7 +30,7 @@ export class TradeServices {
                 if (playbooks.length !== validateReq.playbook_ids.length) {
                     throw new ErrorResponse(404, "One or more playbooks not found or do not belong to user", ErrorCode.PLAYBOOK_NOT_FOUND);
                 }
-            };
+            }
 
             // Calculate Risk Reward
             const risk_reward = calculateRiskReward(validateReq.entry_price, validateReq.sl_price ?? null, validateReq.tp_price ?? null);
@@ -114,7 +114,7 @@ export class TradeServices {
         if(validateReq.exit_time < trade.entry_time) throw new ErrorResponse(400, "Exit time cannot be before entry time");
 
         // Trade Duration Calculation
-        const trade_duration = calculateTradeDuration(trade.entry_time, trade.entry_time);         
+        const trade_duration = calculateTradeDuration(trade.entry_time, validateReq.exit_time);
 
         // Risk Reward Actual Calculation
         const rr_actual = calculateRiskRewardActual(validateReq.pnl, trade.risk_amount?.toNumber() ?? null);
@@ -130,10 +130,13 @@ export class TradeServices {
                 }
             },
             data: {
-                ...validateReq,
+                exit_time: validateReq.exit_time,
+                exit_price: validateReq.exit_price,
+                pnl: validateReq.pnl,
                 trade_duration,
                 rr_actual,
                 trade_result,
+                status: TradeStatus.Closed,
             },
             include: {
                 trade_playbooks: {
