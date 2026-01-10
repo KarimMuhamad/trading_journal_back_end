@@ -235,7 +235,7 @@ Response 401 — Unauthorized
 
 ## 4. Update Trade
 - Method: `PATCH`
-- Endpoint: `/trades/:tradeId/update`
+- Endpoint: `/trades/:tradeId`
 - Authorization: `Bearer <accessToken>`
 
 **Rule**
@@ -316,7 +316,126 @@ Response 401 — Unauthorized
 ---
 
 ## 5. Get All Trades
+- Method: `GET`
+- Endpoint: `/accounts/:accountId/trades`
+- Authorization: `Bearer <accessToken>`
+
+**Query Params**
+
+| Param    | Type     | Optional | Description                    |
+| -------- | -------- | -------- | ------------------------------ |
+| `status` | string   | ❌        | `RUNNING` or `CLOSED`           |
+| `page`   | number   | ✅        | Page number (default: `1`)     |
+| `size`  | number   | ✅        | Items per page (default: `10`) |
+| `search` | string   | ✅        | Search by pair (ex: `BTC`)     |
+| `pair`   | string   | ✅        | Filter by exact pair           |
+| `from`   | ISO date | ✅        | Filter entry_time start        |
+| `to`     | ISO date | ✅        | Filter entry_time end          |
+| `sort`   | string   | ✅        | `entry_time:desc` (default)    |
+
+
+Response 200 - success
+```json
+{
+    "status": "success",
+    "message": "successfully fetched all trades",
+    "data": [
+        {
+            "id": 201,
+            "account_id": 12,
+            "entry_time": "<timestampz>",
+            "pair": "BTCUSDT",
+            "position": "LONG",
+            "entry_price": "<entry_price>",
+            "position_size": 0.5,
+            "status": "Running",
+            "sl_price": <sl_price>,
+            "tp_price": <tp_price>,
+            "risk_amount": <risk_amount>,
+            "risk_reward": 2.0,
+            "playbooks": [
+                { "id": 1, "name": "Order Block" },
+                { "id": 3, "name": "Liquidity Sweep" }
+            ]
+        },
+    ],
+    "paging": {
+        "page": 1,
+        "size": 10,
+        "total": 5
+    }
+}
+```
+
+Response 400 — Validation Error
+```json
+{
+  "status": "error",
+  "message": "Validation error",
+  "errors": [
+    { "field": "status", "message": "status must be RUNNING or CLOSED" }
+  ]
+}
+```
+
+Response 404 — Account Not Found
+```json
+{
+  "status": "error",
+  "message": "Account not found",
+  "code": "ACCOUNT_NOT_FOUND"
+}
+```
+
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
 
 ---
 
 ## 6. Delete Trade
+- Method: `DELETE`
+- Endpoint: `/trades/:tradeId`
+- Authorization: `Bearer <accessToken>`
+
+Response 200 - success
+```josn
+{
+    "status": "success",
+    "message": "Trade deleted successfully."  
+}
+```
+
+Response 400 - Validation Error
+```json
+{
+  "status": "error",
+  "message": "Validation error",
+  "errors": [
+    { "field": "id", "message": "<id_error>" },
+  ]
+}
+```
+
+Response 404 - Not Found
+```json
+{
+  "status": "error",
+  "message": "Trade not found",
+  "code": "TRADE_NOT_FOUND"
+}
+```
+
+Response 401 - Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
