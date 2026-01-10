@@ -231,3 +231,92 @@ Response 401 — Unauthorized
   "code": "AUTH_UNAUTHORIZED"
 }
 ```
+---
+
+## 4. Update Trade
+- Method: `PATCH`
+- Endpoint: `/trades/:tradeId/update`
+- Authorization: `Bearer <accessToken>`
+
+**Rule**
+- Status Trade is `Running`: Can change what in request body 
+- Status Trade is `Closed`: Only can change `notes`, `link_img`
+
+Request Body
+```json
+{
+  "entry_time": "2025-11-13T10:00:00Z",
+  "pair": "BTCUSDT",
+  "position": "LONG",
+  "entry_price": 68000.25,
+  "position_size": 0.5,
+  "sl_price": 67000.00,
+  "tp_price": 70000.00,
+  "link_img": "https://cdn.example.com/trades/chart1.png",
+  "playbook_ids": [1, 3]
+}
+```
+
+Response 200 - Success
+```json
+{
+  "status": "success",
+  "message": "Trade created successfully.",
+  "data": {
+    "id": 201,
+    "account_id": 12,
+    "entry_time": "<timestampz>",
+    "pair": "BTCUSDT",
+    "position": "LONG",
+    "entry_price": "<entry_price>",
+    "position_size": 0.5,
+    "status": "Running",
+    "sl_price": <sl_price>,
+    "tp_price": <tp_price>,
+    "risk_amount": <risk_amount>,
+    "risk_reward": 2.0,
+    "playbooks": [
+      { "id": 1, "name": "Order Block" },
+      { "id": 3, "name": "Liquidity Sweep" }
+    ]
+  }
+}
+```
+
+Response 400 — Validation Error
+```json
+{
+  "status": "error",
+  "message": "Validation error",
+  "errors": [
+    { "field": "tp_price", "message": "tp_price must be a positive number" },
+    { "field": "sl_price", "message": "sl_price must be an ISO 8601 datetime" }
+  ]
+}
+```
+
+Response 404 — Not Found
+```json
+{
+  "status": "error",
+  "message": "Trade not found",
+  "code": "TRADE_NOT_FOUND"
+}
+```
+
+Response 401 — Unauthorized
+```json
+{
+  "status": "error",
+  "message": "Unauthorized",
+  "code": "AUTH_UNAUTHORIZED"
+}
+```
+
+---
+
+## 5. Get All Trades
+
+---
+
+## 6. Delete Trade
