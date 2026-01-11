@@ -13,6 +13,8 @@ export class TradeValidation {
         position_size: DecimalValidator.SIZES,
         tp_price: DecimalValidator.PRICE.optional(),
         sl_price: DecimalValidator.PRICE.optional(),
+        notes: z.string().trim().min(1).max(2000).optional(),
+        link_img: z.string().max(500).optional(),
         playbook_ids: z.array(UuidValidator.UUIDVALIDATOR).optional(),
     })      
 
@@ -21,5 +23,21 @@ export class TradeValidation {
         exit_price: DecimalValidator.PRICE,
         exit_time: z.coerce.date(),
         pnl: DecimalValidator.PRICE,
+        notes: z.string().trim().min(1).max(2000).optional(),
+        link_img: z.string().max(500).optional(),
+    })
+
+    static readonly UPDATE_TRADE: ZodType = z.object({
+        trade_id: UuidValidator.UUIDVALIDATOR,
+        pair: z.string().min(3).max(50).optional(),
+        entry_time: z.coerce.date().optional(),
+        position: z.enum(PositionType).optional(),
+        entry_price: DecimalValidator.PRICE.optional(),
+        position_size: DecimalValidator.SIZES.optional(),
+        tp_price: DecimalValidator.PRICE.optional(),
+        sl_price: DecimalValidator.PRICE.optional(),
+        notes: z.string().trim().min(1).max(2000).optional(),
+        link_img: z.string().max(500).optional(),
+        playbook_ids: z.array(UuidValidator.UUIDVALIDATOR).optional(),
     })
 }
