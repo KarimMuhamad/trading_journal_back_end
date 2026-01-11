@@ -56,13 +56,13 @@ export type CloseRunningTradeRequest = {
 export type UpdateTradeRequest = {
     trade_id: string,
     entry_time?: Date,
-    pair?: number,
+    pair?: string,
     position?: PositionType,
     entry_price?: number,
     position_size?: number,
     sl_price?: number,
     tp_price?: number,
-    link_img?: number,
+    link_img?: string,
     notes?: string,
     playbook_ids: string[]
 }
