@@ -1,7 +1,7 @@
 import { NextFunction, Response } from "express";
 import { AuthUserRequest } from "../types/auth_type";
 import logger from "../application/logger";
-import { CloseRunningTradeRequest, CreateTradeRequest } from "../model/trade_model";
+import { CloseRunningTradeRequest, CreateTradeRequest, UpdateTradeRequest } from "../model/trade_model";
 import { TradeServices } from "../service/trade_services";
 
 export class TradeController {
@@ -64,6 +64,28 @@ export class TradeController {
             logger.info("Close Trade Success", response);
         } catch (e: any) {
             logger.warn("Error Closing Trade", {
+                message: e.message,
+                status: e.status,
+            })
+            next(e)
+        }
+    }
+
+    static async updateTradeById(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const request: UpdateTradeRequest = req.body as UpdateTradeRequest;
+            request.trade_id = req.params.tradeId;
+
+            const response = await TradeServices.updateTrade(req.user!, request);
+            res.status(200).json({
+                status: "success",
+                message: "Updated trade by id successfuly",
+                data: response,
+            });
+            
+            logger.info("Update Trade Successfuly", response);
+        } catch (e: any) {
+            logger.warn("Error Updated trade by id", {
                 message: e.message,
                 status: e.status,
             })
