@@ -478,3 +478,83 @@ describe('PATCH ' + buildUrl('/trades/:tradeId'), () => {
         expect(response.body.status).toBe('error');
     });
 });
+
+describe('DELETED ' + buildUrl('/trades/:tradeId'), () => {
+    let accessToken: string;
+    let account: any;
+    let playbookGlobal: any;
+    let trade: any;
+    let user: any;
+
+    beforeEach(async () => {
+        user = await TestDBUtils.createUser("test", "test@dev.com", "test123456");
+        const session = await ApiTestHelper.createSession("test", "test123456");
+        accessToken = session.accessToken;
+
+        account = await TestDBUtils.createAccount(user.id, false);
+        playbookGlobal  = await TestDBUtils.createPlaybook(user.id, "OB Extreme", "Testing OB");
+        trade = await TradeFactory.create(account.id, {
+            status: TradeStatus.Closed,
+        });
+        await TestDBUtils.attachTradeToPlaybook(playbookGlobal.id, trade.id);
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to delete trade', async () => {
+        const response = await supertest(web).delete(buildUrl(`/trades/${trade.id}`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+    });
+
+    it('should be able to reject if trade not closed', async () => {
+        await prisma.trades.update({
+            where: {
+                id: trade.id,
+            },
+            data: {
+                status: TradeStatus.Running
+            }
+        });
+
+        const response = await supertest(web).delete(buildUrl(`/trades/${trade.id}`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be able to reject with validation eror', async () => {
+        const response = await supertest(web).delete(buildUrl(`/trades/test`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be able to reject if trade id not found', async () => {
+        const randomUUID = crypto.randomUUID();
+
+        const response = await supertest(web).delete(buildUrl(`/trades/${randomUUID}`)).set('Authorization', 'Bearer ' + accessToken);
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(404);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be able to reject with invalid credentials', async () => {
+        const response = await supertest(web).delete(buildUrl(`/trades/${trade.id}`)).set('Authorization', 'Bearer ' + 'salah');
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+    });
+});

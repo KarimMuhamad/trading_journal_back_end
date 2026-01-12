@@ -9,7 +9,7 @@ import { TradeValidation } from "../validation/trade_validation";
 import { Validation } from "../validation/validation";
 import { calculateRiskRewardActual, calculateTradeDuration, resultClassification } from "../utils/closeTradeCalculate";
 import { setDefined } from "../utils/setDefined";
-import { is } from "zod/v4/locales";
+import { id, is, tr } from "zod/v4/locales";
 import { set } from "zod";
 
 export class TradeServices {
@@ -245,5 +245,36 @@ export class TradeServices {
         });
 
         return toTradeResponse(result);
+    }
+
+    static async deleteTrade(user: User, trade_id: string) : Promise<void> {
+        const validateID = Validation.validate(UuidValidator.UUIDVALIDATOR, trade_id);
+
+        const trade = await prisma.trades.findFirst({
+            where : {
+                id: validateID,
+                account: {
+                    user_id: user.id,
+                },
+            },
+            select: {
+                id: true,
+                status: true,
+            }
+        })
+
+        if(!trade) {
+            throw new ErrorResponse(404, "Trade Not Found", ErrorCode.TRADE_NOT_FOUND);
+        }
+
+        if(trade.status !== TradeStatus.Closed) {
+            throw new ErrorResponse(400, "Only Closed trade can be deleted");
+        }
+
+        await prisma.trades.delete({
+            where: {
+                id: trade.id
+            }
+        });
     }
 }
