@@ -343,3 +343,138 @@ describe('PATCH ' + buildUrl('/trades/:tradeId/close'), () => {
         expect(response.body.status).toBe('error');
     });
 });
+
+describe('PATCH ' + buildUrl('/trades/:tradeId'), () => {
+    let accessToken: string;
+    let account: any;
+    let playbookGlobal: any;
+    let trade: any;
+    let user: any;
+
+    beforeEach(async () => {
+        user = await TestDBUtils.createUser("test", "test@dev.com", "test123456");
+        const session = await ApiTestHelper.createSession("test", "test123456");
+        accessToken = session.accessToken;
+
+        account = await TestDBUtils.createAccount(user.id, false);
+        playbookGlobal  = await TestDBUtils.createPlaybook(user.id, "OB Extreme", "Testing OB");
+        trade = await TradeFactory.create(account.id);
+        await TestDBUtils.attachTradeToPlaybook(playbookGlobal.id, trade.id);
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to update trade', async () => {
+        console.log(trade);
+        const response = await supertest(web).patch(buildUrl(`/trades/${trade.id}`)).set('Authorization', 'Bearer ' + accessToken).send({
+           pair: "BTC/USDT",
+           sl_price: 99.123,
+           tp_price: 125.888,
+           entry_price: 101.134,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.pair).toBe("BTC/USDT");
+    });
+
+    it('should be able update with change playbooks', async () => {
+        console.log(trade);
+        const playbook2 = await TestDBUtils.createPlaybook(user.id, "Liquidity Sweep", "Test Liquidity");
+
+        const response = await supertest(web).patch(buildUrl(`/trades/${trade.id}`)).set('Authorization', 'Bearer ' + accessToken).send({
+           playbook_ids: [playbookGlobal.id, playbook2.id],
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.playbooks.length).toBe(2);
+    });
+
+    it('should be able to update with closed status [notes, link_img]', async () => {
+        await prisma.trades.update({
+            where: { id: trade.id },
+            data: { status: TradeStatus.Closed }
+        });
+
+        const response = await supertest(web).patch(buildUrl(`/trades/${trade.id}`)).set('Authorization', 'Bearer ' + accessToken).send({
+            notes: "test notes",
+            link_img: "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png",
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe('success');
+        expect(response.body.data.status).toBe(TradeStatus.Closed);
+    });
+
+    it('should reject if update not allowed field', async () => {
+        await prisma.trades.update({
+            where: { id: trade.id },
+            data: { status: TradeStatus.Closed }
+        });
+
+        const response = await supertest(web).patch(buildUrl(`/trades/${trade.id}`)).set('Authorization', 'Bearer ' + accessToken).send({
+           pair: "BTC/USDT",
+           sl_price: 99.123,
+           tp_price: 125.888,
+           entry_price: 101.134,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be able to reject if trade id not found', async () => {
+        const randomUUID = crypto.randomUUID();
+
+        const response = await supertest(web).patch(buildUrl(`/trades/${randomUUID}`)).set('Authorization', 'Bearer ' + accessToken).send({
+            pair: "BTC/USDT",
+            sl_price: 99.123,
+            tp_price: 125.888,
+            entry_price: 101.134,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(404);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be reject with validation error', async () => {
+        const response = await supertest(web).patch(buildUrl(`/trades/test`)).set('Authorization', 'Bearer ' + accessToken).send({
+            pair: 12,
+            sl_price: "99.123",
+            tp_price: 125.888,
+            entry_price: 101.134,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe('error');
+    });
+
+    it('should be reject with invalid credentials', async () => {
+        const response = await supertest(web).patch(buildUrl(`/trades/${trade.id}`)).set('Authorization', 'Bearer ' + 'salah').send({
+            pair: "BTC/USDT",
+            sl_price: 99.123,
+            tp_price: 125.888,
+            entry_price: 101.134,
+        });
+
+        logger.info(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe('error');
+    });
+});
