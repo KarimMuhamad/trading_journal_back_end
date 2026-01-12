@@ -1,13 +1,16 @@
 import { calculateRiskAmount, calculateRiskReward } from "../utils/calculateRR";
-import { TradeStatus, User } from "../../prisma/generated/client";
+import { Prisma, TradeStatus, User } from "../../prisma/generated/client";
 import prisma from "../application/database";
 import { ErrorCode } from "../error/error-code";
 import { ErrorResponse } from "../error/error_response";
-import { CloseRunningTradeRequest, CreateTradeRequest, toTradeResponse, TradeResponse } from "../model/trade_model";
+import { CloseRunningTradeRequest, CreateTradeRequest, toTradeResponse, TradeResponse, UpdateTradeRequest } from "../model/trade_model";
 import { UuidValidator } from "../validation/helpers/uuid_validator";
 import { TradeValidation } from "../validation/trade_validation";
 import { Validation } from "../validation/validation";
 import { calculateRiskRewardActual, calculateTradeDuration, resultClassification } from "../utils/closeTradeCalculate";
+import { setDefined } from "../utils/setDefined";
+import { is } from "zod/v4/locales";
+import { set } from "zod";
 
 export class TradeServices {
     static async executeTrade(user: User, req: CreateTradeRequest) : Promise<TradeResponse> {
@@ -138,6 +141,98 @@ export class TradeServices {
                 trade_result,
                 status: TradeStatus.Closed,
             },
+            include: {
+                trade_playbooks: {
+                    include: {
+                        playbook: {
+                            select: {id: true, name: true}
+                        }
+                    }
+                }
+            }
+        });
+
+        return toTradeResponse(result);
+    }
+
+    static async updateTrade(user: User, req: UpdateTradeRequest) : Promise<TradeResponse> {
+        const validateReq = Validation.validate(TradeValidation.UPDATE_TRADE, req);
+
+        const trade = await prisma.trades.findFirst({
+            where: {
+                id: validateReq.trade_id,
+                account: {
+                    user_id: user.id,
+                }
+            },
+            include: {
+                trade_playbooks: {
+                    include: {
+                        playbook: {
+                            select: {id: true, name: true}
+                        }
+                    }
+                }
+            }
+        });
+
+        if(!trade) throw new ErrorResponse(404, "Trade not found", ErrorCode.TRADE_NOT_FOUND);
+        
+        const isClosed = trade.status === TradeStatus.Closed; 
+        
+        const updateData: Prisma.TradesUpdateInput = {};
+
+        // Fields allowed for both status
+        setDefined(updateData, 'notes', validateReq.notes);
+        setDefined(updateData, 'link_img', validateReq.link_img);
+
+        // Fields allowed for RUNNING only
+        if(!isClosed) {
+            setDefined(updateData, 'pair', validateReq.pair);
+            setDefined(updateData, 'entry_time', validateReq.entry_time);
+            setDefined(updateData, 'entry_price', validateReq.entry_price);
+            setDefined(updateData, 'position', validateReq.position);
+            setDefined(updateData, 'position_size', validateReq.position_size);
+            setDefined(updateData, 'tp_price', validateReq.tp_price);
+            setDefined(updateData, 'sl_price', validateReq.sl_price);
+
+            const shouldRecalculate = 
+                validateReq.entry_price !== undefined ||
+                validateReq.sl_price !== undefined ||
+                validateReq.tp_price !== undefined ||
+                validateReq.position_size !== undefined;
+
+            if(shouldRecalculate) {
+                const entry_price = validateReq.entry_price ?? trade.entry_price.toNumber();
+                const sl_price = validateReq.sl_price ?? trade.sl_price?.toNumber();
+                const tp_price = validateReq.tp_price ?? trade.tp_price?.toNumber();
+                const position_size = validateReq.position_size ?? trade.position_size.toNumber();
+
+                updateData.risk_reward = calculateRiskReward(entry_price, sl_price ?? null, tp_price ?? null);
+                updateData.risk_amount = calculateRiskAmount(entry_price, sl_price ?? null, position_size ?? null);
+            }
+
+            if(validateReq.playbook_ids) {
+                updateData.trade_playbooks = {
+                    deleteMany: {
+                        trade_id: trade.id
+                    },
+                    create: validateReq.playbook_ids.map((id) => ({
+                        playbook_id: id
+                    })),
+                };
+            }
+        }
+
+        if(Object.keys(updateData).length === 0) {
+            throw new ErrorResponse(400, 'No valid fields to update for current trade status');
+        }
+
+        const result = await prisma.trades.update({
+            where: {
+                id: trade.id
+            },
+            data: updateData,
             include: {
                 trade_playbooks: {
                     include: {

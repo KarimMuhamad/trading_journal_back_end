@@ -20,6 +20,8 @@ export type TradeResponse = {
     rr_actual: number | null,
     trade_result: TradeResult | null,
     status: TradeStatus,
+    notes: string | null,
+    link_img: string | null,
     playbooks: TradePlaybooksRelation[],  
 }
 
@@ -37,6 +39,8 @@ export type CreateTradeRequest = {
     position_size: number,
     tp_price?: number | null,
     sl_price?: number | null,
+    notes?: string,
+    link_img?: string,
     playbook_ids: string[],
 }
 
@@ -45,6 +49,22 @@ export type CloseRunningTradeRequest = {
     exit_price: number,
     exit_time: Date,
     pnl: number,
+    notes?: string,
+    link_img?: string,
+}
+
+export type UpdateTradeRequest = {
+    trade_id: string,
+    entry_time?: Date,
+    pair?: string,
+    position?: PositionType,
+    entry_price?: number,
+    position_size?: number,
+    sl_price?: number,
+    tp_price?: number,
+    link_img?: string,
+    notes?: string,
+    playbook_ids: string[]
 }
 
 export function toTradeResponse(trade: Trades & { trade_playbooks : {playbook: TradePlaybooksRelation}[]} ) : TradeResponse {
@@ -67,6 +87,8 @@ export function toTradeResponse(trade: Trades & { trade_playbooks : {playbook: T
         entry_time: trade.entry_time,
         tp_price: trade.tp_price?.toNumber() ?? null,
         sl_price: trade.sl_price?.toNumber() ?? null,
+        notes: trade.notes ?? null,
+        link_img: trade.link_img ?? null,
         playbooks: trade.trade_playbooks.map(pb => ({
             id: pb.playbook.id,
             name: pb.playbook.name,
