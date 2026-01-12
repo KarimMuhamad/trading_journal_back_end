@@ -92,4 +92,24 @@ export class TradeController {
             next(e)
         }
     }
+
+    static async deleteTrade(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const trade_id = req.params.tradeId
+
+            await TradeServices.deleteTrade(req.user!, trade_id);
+            res.status(200).json({
+                status: "success",
+                message: "Deleted Trade Successfuly",
+            });
+
+            logger.info("Trade Deleted Succes", {id: trade_id});
+        } catch(e: any) {
+            logger.warn("Error deletede trade", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
 }

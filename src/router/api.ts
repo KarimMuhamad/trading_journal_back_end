@@ -41,7 +41,8 @@ apiRouter.patch('/accounts/:accountId/archive', AccountController.archiveAccount
 apiRouter.patch('/accounts/:accountId/unarchive', AccountController.unarchiveAccount);
 
 // Trade Endpoints
-apiRouter.post('/accounts/:accountId/trades', TradeController.executeTrade);
 apiRouter.get('/trades/:tradeId', TradeController.getTradeById);
 apiRouter.patch('/trades/:tradeId', TradeController.updateTradeById);
+apiRouter.delete('/trades/:tradeId', TradeController.deleteTrade);
+apiRouter.post('/accounts/:accountId/trades', TradeController.executeTrade);
 apiRouter.patch('/trades/:tradeId/closed', TradeController.closeTrade);
