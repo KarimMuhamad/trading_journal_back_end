@@ -1,6 +1,6 @@
 import {z, ZodType } from "zod";
 import { UuidValidator } from "./helpers/uuid_validator";
-import { PositionType } from "../../prisma/generated/enums";
+import { PositionType, TradeStatus } from "../../prisma/generated/enums";
 import { DecimalValidator } from "./helpers/decimal_validator";
 
 export class TradeValidation {
@@ -39,5 +39,21 @@ export class TradeValidation {
         notes: z.string().trim().min(1).max(2000).optional(),
         link_img: z.string().max(500).optional(),
         playbook_ids: z.array(UuidValidator.UUIDVALIDATOR).optional(),
+    })
+
+    static readonly GET_ALL_TRADES: ZodType = z.object({
+        account_id: UuidValidator.UUIDVALIDATOR,
+        search: z.string().min(1).optional(),
+        page: z.number().min(1).positive().default(1),
+        size: z.number().min(1).max(50).positive().default(15),
+        status: z.enum([TradeStatus.Running, TradeStatus.Closed]).optional(),
+        from_date: z.string().transform(val => new Date(val)).refine(date => !isNaN(date.getTime()), {
+            message: "Invalid date",
+            path: ["from_date"],
+        }).optional(),
+        to_date: z.string().transform(val => new Date(val)).refine(date => !isNaN(date.getTime()), {
+            message: "Invalid date",
+            path: ["to_date"],
+        }).optional(),
     })
 }

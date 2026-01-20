@@ -1,5 +1,4 @@
 import {z, ZodType } from "zod";
-import { id } from "zod/v4/locales";
 import {UuidValidator} from "./helpers/uuid_validator";
 
 export class PlaybookValidation {
