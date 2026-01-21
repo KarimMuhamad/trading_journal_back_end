@@ -47,11 +47,11 @@ export class TradeValidation {
         page: z.number().min(1).positive().default(1),
         size: z.number().min(1).max(50).positive().default(15),
         status: z.enum([TradeStatus.Running, TradeStatus.Closed]).optional(),
-        from_date: z.string().transform(val => new Date(val)).refine(date => !isNaN(date.getTime()), {
+        from_date: z.string().refine(date => !isNaN(Date.parse(date)), {
             message: "Invalid date",
             path: ["from_date"],
         }).optional(),
-        to_date: z.string().transform(val => new Date(val)).refine(date => !isNaN(date.getTime()), {
+        to_date: z.string().refine(date => !isNaN(Date.parse(date)), {
             message: "Invalid date",
             path: ["to_date"],
         }).optional(),
