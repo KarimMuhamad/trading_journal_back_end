@@ -41,19 +41,13 @@ export class TradeValidation {
         playbook_ids: z.array(UuidValidator.UUIDVALIDATOR).optional(),
     })
 
-    static readonly GET_ALL_TRADES: ZodType = z.object({
+    static readonly GET_ALL_TRADES = z.object({
         account_id: UuidValidator.UUIDVALIDATOR,
         search: z.string().min(1).optional(),
-        page: z.number().min(1).positive().default(1),
-        size: z.number().min(1).max(50).positive().default(15),
+        page: z.coerce.number().min(1).positive().default(1),
+        size: z.coerce.number().min(1).max(50).positive().default(15),
         status: z.enum([TradeStatus.Running, TradeStatus.Closed]).optional(),
-        from_date: z.string().refine(date => !isNaN(Date.parse(date)), {
-            message: "Invalid date",
-            path: ["from_date"],
-        }).optional(),
-        to_date: z.string().refine(date => !isNaN(Date.parse(date)), {
-            message: "Invalid date",
-            path: ["to_date"],
-        }).optional(),
-    })
+        from_date: z.coerce.date().optional(),
+        to_date: z.coerce.date().optional(),
+    }) 
 }

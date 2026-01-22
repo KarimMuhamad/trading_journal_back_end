@@ -277,7 +277,7 @@ export class TradeServices {
         });
     }
 
-    static async getAllTrade(user: User, req: getAllTradesRequest) : Promise<Pageable<TradeResponse>> {
+    static async getAllTrades(user: User, req: getAllTradesRequest) : Promise<Pageable<TradeResponse>> {
         const whereClause: Prisma.TradesWhereInput = {
             account_id: req.account_id,
             account: {

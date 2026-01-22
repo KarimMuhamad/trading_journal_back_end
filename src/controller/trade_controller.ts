@@ -1,8 +1,10 @@
 import { NextFunction, Response } from "express";
 import { AuthUserRequest } from "../types/auth_type";
 import logger from "../application/logger";
-import { CloseRunningTradeRequest, CreateTradeRequest, UpdateTradeRequest } from "../model/trade_model";
+import { CloseRunningTradeRequest, CreateTradeRequest, getAllTradesRequest, UpdateTradeRequest } from "../model/trade_model";
 import { TradeServices } from "../service/trade_services";
+import { Validation } from "../validation/validation";
+import { TradeValidation } from "../validation/trade_validation";
 
 export class TradeController {
     static async executeTrade(req: AuthUserRequest, res: Response, next: NextFunction) {
@@ -106,6 +108,42 @@ export class TradeController {
             logger.info("Trade Deleted Succes", {id: trade_id});
         } catch(e: any) {
             logger.warn("Error deletede trade", {
+                message: e.message,
+                status: e.status,
+            });
+            next(e);
+        }
+    }
+
+    static async getAllTrades(req: AuthUserRequest, res: Response, next: NextFunction) {
+        try {
+            const rawQueryParams = {
+                account_id: req.params.accountId,
+                status: req.query.status, 
+                search: req.query.search,
+                page: req.query.page, 
+                size: req.query.size, 
+                from_date: req.query.from_date,
+                to_date: req.query.to_date, 
+            }
+
+            const request: getAllTradesRequest = Validation.validate(TradeValidation.GET_ALL_TRADES, rawQueryParams);
+
+            const response = await TradeServices.getAllTrades(req.user!, request);
+
+            res.status(200).json({
+                status: "success",
+                message: "All trades fetched successfuly",
+                data: response,
+            });
+
+            logger.info("Fetched All Trades Success", {
+                userId: req.user!.id,
+                accountId: request.account_id,
+            });
+
+        } catch (e: any) {
+            logger.warn("Error fetching all trades", {
                 message: e.message,
                 status: e.status,
             });

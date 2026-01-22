@@ -73,8 +73,8 @@ export type getAllTradesRequest = {
     search?: string,
     page: number,
     size: number,
-    from_date?: string
-    to_date?: string,
+    from_date?: Date,
+    to_date?: Date,
 }
 
 export function toTradeResponse(trade: Trades & { trade_playbooks : {playbook: TradePlaybooksRelation}[]} ) : TradeResponse {
