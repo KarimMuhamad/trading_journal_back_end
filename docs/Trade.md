@@ -324,11 +324,10 @@ Response 401 — Unauthorized
 
 | Param    | Type     | Optional | Description                    |
 | -------- | -------- | -------- | ------------------------------ |
-| `status` | string   | ❌        | `RUNNING` or `CLOSED`           |
+| `status` | string   | ❌        | `RUNNING` or `CLOSED` (default: `CLOSED`)          |
 | `page`   | number   | ✅        | Page number (default: `1`)     |
 | `size`  | number   | ✅        | Items per page (default: `10`) |
 | `search` | string   | ✅        | Search by pair (ex: `BTC`)     |
-| `pair`   | string   | ✅        | Filter by exact pair           |
 | `from`   | ISO date | ✅        | Filter entry_time start        |
 | `to`     | ISO date | ✅        | Filter entry_time end          |
 | `sort`   | string   | ✅        | `entry_time:desc` (default)    |

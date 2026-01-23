@@ -67,6 +67,16 @@ export type UpdateTradeRequest = {
     playbook_ids: string[]
 }
 
+export type getAllTradesRequest = {
+    account_id: string,
+    status?: TradeStatus,
+    search?: string,
+    page: number,
+    size: number,
+    from_date?: Date,
+    to_date?: Date,
+}
+
 export function toTradeResponse(trade: Trades & { trade_playbooks : {playbook: TradePlaybooksRelation}[]} ) : TradeResponse {
     return {
         id: trade.id,

@@ -45,4 +45,5 @@ apiRouter.get('/trades/:tradeId', TradeController.getTradeById);
 apiRouter.patch('/trades/:tradeId', TradeController.updateTradeById);
 apiRouter.delete('/trades/:tradeId', TradeController.deleteTrade);
 apiRouter.post('/accounts/:accountId/trades', TradeController.executeTrade);
+apiRouter.get('/accounts/:accountId/trades', TradeController.getAllTrades)
 apiRouter.patch('/trades/:tradeId/closed', TradeController.closeTrade);

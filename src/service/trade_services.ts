@@ -3,14 +3,13 @@ import { Prisma, TradeStatus, User } from "../../prisma/generated/client";
 import prisma from "../application/database";
 import { ErrorCode } from "../error/error-code";
 import { ErrorResponse } from "../error/error_response";
-import { CloseRunningTradeRequest, CreateTradeRequest, toTradeResponse, TradeResponse, UpdateTradeRequest } from "../model/trade_model";
+import { CloseRunningTradeRequest, CreateTradeRequest, getAllTradesRequest, toTradeResponse, TradeResponse, UpdateTradeRequest } from "../model/trade_model";
 import { UuidValidator } from "../validation/helpers/uuid_validator";
 import { TradeValidation } from "../validation/trade_validation";
 import { Validation } from "../validation/validation";
 import { calculateRiskRewardActual, calculateTradeDuration, resultClassification } from "../utils/closeTradeCalculate";
 import { setDefined } from "../utils/setDefined";
-import { id, is, tr } from "zod/v4/locales";
-import { set } from "zod";
+import { Pageable } from "../model/page";
 
 export class TradeServices {
     static async executeTrade(user: User, req: CreateTradeRequest) : Promise<TradeResponse> {
@@ -276,5 +275,74 @@ export class TradeServices {
                 id: trade.id
             }
         });
+    }
+
+    static async getAllTrades(user: User, req: getAllTradesRequest) : Promise<Pageable<TradeResponse>> {
+        const whereClause: Prisma.TradesWhereInput = {
+            account_id: req.account_id,
+            account: {
+                user_id: user.id,
+            },
+            ...(req.status && { status: req.status }),
+            ...(req.search && {
+                pair: {
+                    contains: req.search,
+                    mode: 'insensitive',
+                }
+            }),
+            ...(req.from_date || req.to_date 
+                ? {
+                    entry_time: {
+                        ...(req.from_date && { gte: req.from_date}),
+                        ...(req.to_date && { lte: req.to_date}),
+                    },
+                }
+                : {}
+            )
+        };
+
+        const [trades, total] = await Promise.all([
+            prisma.trades.findMany({
+                where: whereClause,
+                skip: (req.page - 1) * req.size,
+                take: req.size,
+                orderBy: {
+                    entry_time: 'desc',
+                },
+                include: {
+                    trade_playbooks: {
+                        include: {
+                            playbook: {
+                                select: {id: true, name: true}
+                            }
+                        }
+                    }
+                }
+            }),
+
+            prisma.trades.count({ where: whereClause }),
+        ]);
+
+        if(total === 0) {
+            const isAccountExist = await prisma.accounts.findFirst({
+                where: {
+                    id: req.account_id,
+                    user_id: user.id,
+                }
+            });
+
+            if(!isAccountExist) {
+                throw new ErrorResponse(404, "Account not found", ErrorCode.ACCOUNT_NOT_FOUND);
+            }
+        }
+
+        return {
+            data: trades.map(trade => toTradeResponse(trade)),
+            paging: {
+                page: req.page,
+                size: req.size,
+                total: Math.ceil(total / req.size),
+            }
+        };
     }
 }
