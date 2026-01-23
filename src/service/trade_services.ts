@@ -285,7 +285,7 @@ export class TradeServices {
             },
             ...(req.status && { status: req.status }),
             ...(req.search && {
-                parir: {
+                pair: {
                     contains: req.search,
                     mode: 'insensitive',
                 }

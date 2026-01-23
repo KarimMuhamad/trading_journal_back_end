@@ -123,8 +123,8 @@ export class TradeController {
                 search: req.query.search,
                 page: req.query.page, 
                 size: req.query.size, 
-                from_date: req.query.from_date,
-                to_date: req.query.to_date, 
+                from_date: req.query.from,
+                to_date: req.query.to, 
             }
 
             const request: getAllTradesRequest = Validation.validate(TradeValidation.GET_ALL_TRADES, rawQueryParams);

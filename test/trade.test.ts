@@ -558,3 +558,72 @@ describe('DELETED ' + buildUrl('/trades/:tradeId'), () => {
         expect(response.status).toBe(401);
     });
 });
+
+describe('GET ' + buildUrl('/accounts/:accountId/trades'), () => {
+    let accessToken: string;
+    let account: any;
+    let user: any;
+    let playbookGlobal: any;
+
+    beforeEach(async () => {
+        user = await TestDBUtils.createUser("test", "test@dev.com", "test123456");
+        const session = await ApiTestHelper.createSession("test", "test123456");
+        accessToken = session.accessToken;
+
+        account = await TestDBUtils.createAccount(user.id, false);
+        playbookGlobal = await TestDBUtils.createPlaybook(user.id, "Breakout Strategy", "Testing Breakout");
+    });
+
+    afterEach(async () => {
+        await TestDBUtils.cleanDB();
+    });
+
+    it('should be able to get all playbooks', async () => {
+        await TradeFactory.createBatchWithPlaybook(account.id, playbookGlobal.id, 100, {status: TradeStatus.Closed});
+
+        const response = await supertest(web)
+            .get(buildUrl(`/accounts/${account.id}/trades?from=2026-01-18&to=2026-01-23&search=BTC`))
+            .set('Authorization', 'Bearer ' + accessToken);
+
+        logger.debug(response.body);
+
+        expect(response.status).toBe(200);
+        expect(response.body.status).toBe("success");
+
+        console.log(response.body.data);
+    });
+
+    it('should be reject with invalid UUID accountId', async () => {
+        const response = await supertest(web)
+            .get(buildUrl(`/accounts/invalid-uuid/trades`))
+            .set('Authorization', 'Bearer ' + accessToken);
+
+        logger.debug(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe("error");
+    });
+
+    it('should be reject with validation error (invalid size)', async () => {
+        const response = await supertest(web)
+            .get(buildUrl(`/accounts/${account.id}/trades`))
+            .query({ size: 100 }) // Max is 50
+            .set('Authorization', 'Bearer ' + accessToken);
+
+        logger.debug(response.body);
+
+        expect(response.status).toBe(400);
+        expect(response.body.status).toBe("error");
+    });
+
+    it('should be reject with unauthorized error', async () => {
+        const response = await supertest(web)
+            .get(buildUrl(`/accounts/${account.id}/trades`))
+            .set('Authorization', 'Bearer ' + 'invalid-token');
+
+        logger.debug(response.body);
+
+        expect(response.status).toBe(401);
+        expect(response.body.status).toBe("error");
+    });
+});

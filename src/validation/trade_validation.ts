@@ -45,7 +45,7 @@ export class TradeValidation {
         account_id: UuidValidator.UUIDVALIDATOR,
         search: z.string().min(1).optional(),
         page: z.coerce.number().min(1).positive().default(1),
-        size: z.coerce.number().min(1).max(50).positive().default(15),
+        size: z.coerce.number().min(1).max(50).positive().default(10),
         status: z.enum([TradeStatus.Running, TradeStatus.Closed]).optional(),
         from_date: z.coerce.date().optional(),
         to_date: z.coerce.date().optional(),
