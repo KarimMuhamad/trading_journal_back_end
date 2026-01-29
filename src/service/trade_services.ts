@@ -72,11 +72,9 @@ export class TradeServices {
     }
 
     static async getTradeById(user: User, trade_id: string) : Promise<TradeResponse> {
-        const validateID = Validation.validate(UuidValidator.UUIDVALIDATOR, trade_id);
-
         const result = await prisma.trades.findFirst({
             where: {
-                id: validateID,
+                id: trade_id,
                 account: {
                     user_id: user.id,
                 }
@@ -102,7 +100,7 @@ export class TradeServices {
 
         const trade = await prisma.trades.findUnique({
             where: {
-                id: validateReq.trade_id,
+                id: validateReq.trad_id,
                 account: {
                     user_id: user.id,
                 }

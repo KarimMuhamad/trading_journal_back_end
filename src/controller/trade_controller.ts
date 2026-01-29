@@ -31,7 +31,7 @@ export class TradeController {
 
     static async getTradeById(req: AuthUserRequest, res: Response, next: NextFunction) {
         try {
-            const trade_id = req.params.tradeId;
+            const {trade_id} = Validation.validate(TradeValidation.GET_TRADE_BY_ID, req.params.tradeId);
             
             const response = await TradeServices.getTradeById(req.user!, trade_id);
             res.status(200).json({
